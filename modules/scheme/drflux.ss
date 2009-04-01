@@ -2,11 +2,16 @@
 
 ;; This script the work normally done by boot.scm and the Fluxus main
 ;; application when running under MrEd
-
+;;
 ;; Note: user can pass in window arguments by defining top-level variables
-;; win-label
-;; win-min-width
-;; win-min-height
+;;
+;; fluxus:win-label	-- name of window
+;; fluxus:win-min-width	-- window width (default 720)
+;; fluxus:win-min-height - window heigh (default 576)
+;; fluxus:win-fovy	-- vertical fovy (default 90)
+;; fluxus:win-near	-- near clip plane (default 1)
+;; fluxus:win-far	-- far clip plane (default 10000)
+;;
 
 #lang scheme/base
 
@@ -122,8 +127,8 @@
 
 (define *frame* (instantiate frame% ("drflux")))
 (define *canvas* (instantiate fluxus-canvas% (*frame*)
-			      (min-width (defined? 'win-min-width 720))
-			      (min-height (defined? 'win-min-height 576))))
+			      (min-width (defined? 'fluxus:win-min-width 720))
+			      (min-height (defined? 'fluxus:win-min-height 576))))
 
 (define (loop) 
   (send *canvas* on-paint)
@@ -155,9 +160,9 @@
 
 (define (init-me)
   ;; make and show the window and canvas 
-  (fluxus-reshape-callback (defined? 'win-min-width 720) (defined? 'win-min-height 576))
-  (set-fov (defined? 'win-fovy last-fovy) (defined? 'win-near last-near) (defined? 'win-far last-far))
-  (send *frame* set-label (defined? 'win-label (string-append "drflux " fluxus-version)))
+  (fluxus-reshape-callback (defined? 'fluxus:win-min-width 720) (defined? 'fluxus:win-min-height 576))
+  (set-fov (defined? 'fluxus:win-fovy last-fovy) (defined? 'fluxus:win-near last-near) (defined? 'fluxus:win-far last-far))
+  (send *frame* set-label (defined? 'fluxus:win-label (string-append "drflux " fluxus-version)))
   (send *frame* show #t)
   ; start fluxus main loop
   (restart))
