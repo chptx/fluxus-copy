@@ -1,13 +1,18 @@
 ;; [ Copyright (C) 2008 Dave Griffiths : GPLv2 see LICENCE ]
 
-; this is the startup script for the fluxus scratchpad
-; this script loads all the modules and sets things up so the 
-; fluxus application works without having to worry about setup
+;; This script the work normally done by boot.scm and the Fluxus main
+;; application when running under MrEd
 
-; need to set some global stuff up, I know it's wrong, looking for a way around it.
-; (how can we load the extensions before requiring the modules they contain)
+;; Note: user can pass in window arguments by defining top-level variables
+;; win-label
+;; win-min-width
+;; win-min-height
 
 #lang scheme/base
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; from boot.scm
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (require scheme/class
          mred/mred
@@ -17,8 +22,48 @@
 (provide 
  (all-from-out fluxus-016/fluxus))
 
-(define fluxus-collects-location (path->string (car (cdr (current-library-collection-paths)))))
-(define fluxus-version "0.16")
+(provide defined? *canvas* *frame* restart set-fov)
+
+(define (defined? s . def)
+  (namespace-variable-value s #t (lambda () (if (null? def) #f (car def)))))
+
+(define fluxus-collects-location (path->string (car (current-library-collection-paths))))
+(define fluxus-version "016")
+(define fluxus-name (string-append "fluxus-" fluxus-version))
+;; need a better way to do this (environment variables? top-levels?)
+(define fluxus-data-location (defined? 'fluxus-data-location 
+			       (string-append fluxus-collects-location "/" fluxus-name )))
+
+;; things normally done by boot.scm
+(init-help (string-append fluxus-collects-location "/" fluxus-name "/helpmap.scm"))
+(set-searchpaths (list
+                  "./"
+                  (string-append fluxus-data-location "/material/textures/")
+                  (string-append fluxus-data-location "/material/shaders/")
+                  (string-append fluxus-data-location "/material/meshes/")
+		  (string-append fluxus-data-location "/material/fonts/")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Backwards Compatibility
+;; (todo: remove all below at some point!)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(provide time pdata-set pdata-get build-line)
+;; override the built in time function for pre 0.12 compatibility
+(define time flxtime)
+;; for compatibility pre 0.13
+(define pdata-set pdata-set!)
+(define pdata-get pdata-ref)
+;; for compatibility pre 0.15
+(define build-line build-ribbon)
+
+; execute the user config script, if it exists
+(define user-script (string-append (getenv "HOME") "/.fluxus.scm"))
+(when (file-exists? user-script)
+  (load user-script))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Fluxus Application section
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define fluxus-canvas%
   (class* canvas% ()
@@ -38,7 +83,9 @@
     (define/override (on-size width height)
       (with-gl-context
        (lambda () 
-         (fluxus-reshape-callback width height))))
+         (fluxus-reshape-callback width height)
+	 (set-fov last-fovy last-near last-far)	;; reset FOV for new window size
+	 )))
     
     ; mouse
     (define/override (on-event event)
@@ -73,20 +120,55 @@
     
     (fluxus-canvas-new)))
 
-(define frame (instantiate frame% ("drflux")))
-(define fluxus-canvas (instantiate fluxus-canvas% (frame) (min-width 720) (min-height 576)))
+(define *frame* (instantiate frame% ("drflux")))
+(define *canvas* (instantiate fluxus-canvas% (*frame*)
+			      (min-width (defined? 'win-min-width 720))
+			      (min-height (defined? 'win-min-height 576))))
 
 (define (loop) 
-  (send fluxus-canvas on-paint)
+  (send *canvas* on-paint)
+  (sleep 0.0001)	;; smoother update
   (loop))
 
-(define (init-me)
-  ; make and show the window and canvas 
-  (fluxus-reshape-callback 720 576)
-  (send frame set-label (string-append "drflux " fluxus-version))
-  (send frame show #t)
+(define fluxus-thread #f)
+(define (restart)
+  ;; stop old thread if it exists
+  (when fluxus-thread (kill-thread fluxus-thread))
   (thread loop))
+
+(define last-fovy 90)	;; vertical FOV
+(define last-near 1)
+(define last-far 10000)
+
+(define (set-fov fovy near far)
+  ;; Specify vertical FOV in degrees and clip info to make sure it's consistent
+  (let* ([ymax (* near (tan (* (/ (* fovy 3.141592) 180) 0.5)))]
+	 [ymin (- ymax)]
+	 [scrsize (get-screen-size)]
+	 [aspect (/ (vector-ref scrsize 0) (vector-ref scrsize 1))]	;; width/height
+	 )
+    (set! last-fovy fovy)	;; remember so we can handle reshapes
+    (set! last-near near)
+    (set! last-far far)
+    (clip near far)
+    (frustum (* ymin aspect) (* ymax aspect) ymin ymax)))
+
+(define (init-me)
+  ;; make and show the window and canvas 
+  (fluxus-reshape-callback (defined? 'win-min-width 720) (defined? 'win-min-height 576))
+  (set-fov (defined? 'win-fovy last-fovy) (defined? 'win-near last-near) (defined? 'win-far last-far))
+  (send *frame* set-label (defined? 'win-label (string-append "drflux " fluxus-version)))
+  (send *frame* show #t)
+  ; start fluxus main loop
+  (restart))
 
 (init-me)
 
+(define (waitforinit)
+  ;; Let the update loop cycle once before trying to use libfluxus
+  (when (= (flxtime) 0.0)
+	(sleep 0.05)
+	(waitforinit)
+	))
 
+(waitforinit)

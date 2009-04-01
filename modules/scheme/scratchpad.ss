@@ -15,14 +15,14 @@
 #lang scheme/base
 
 (require "fluxus-engine.ss"
-	     "fluxus-audio.ss"
+	 "fluxus-audio.ss"
          "fluxus-osc.ss"
-		 fluxus-016/input
-		 fluxus-016/help
-		 fluxus-016/camera
-		 fluxus-016/building-blocks
-		 fluxus-016/tasks
-		 (only-in srfi/13 string-pad))
+	 fluxus-016/input
+	 fluxus-016/help
+	 fluxus-016/camera
+	 fluxus-016/building-blocks
+	 fluxus-016/tasks
+	 (only-in srfi/13 string-pad))
 		 
 (provide 
  fluxus-auto-indent

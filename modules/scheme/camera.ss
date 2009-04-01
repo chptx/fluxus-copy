@@ -17,9 +17,14 @@
  reset-camera
  unlock-camera)
 
+(define (defined? s . def)
+  (namespace-variable-value s #t (lambda () (if (null? def) #f (car def)))))
+
+(define camera-offset (defined? 'camera-offset (vector 0 1 -10)))	;; allow override
 (define camera-locked #f)
-(define camera-matrix (mtranslate (vector 0 1 -10)))
-(define camera-position (vector 0 0 -10))
+(define camera-matrix (mtranslate camera-offset))
+(define camera-position (vector 0 0 0))
+(vector-copy! camera-position 0 camera-offset)
 (define camera-rot-now (vector 0 0 0 1))
 (define camera-rot-start (vector 0 0 0 1))
 (define click-mouse (vector 0 0))
@@ -43,8 +48,9 @@
 ;; EndFunctionDoc	
 
 (define (reset-camera)
-  (set! camera-matrix (mtranslate (vector 0 1 -10)))
-  (set! camera-position (vector 0 0 -10))
+  (set! camera-matrix (mtranslate camera-offset))
+  (set! camera-position (vector 0 0 0))
+  (vector-copy! camera-position 0 camera-offset)	; camera-position get's mutated
   (set! camera-rot-now (vector 0 0 0 1))
   (set! camera-rot-start (vector 0 0 0 1))
   (set! camera-locked #f)

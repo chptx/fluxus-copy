@@ -153,7 +153,7 @@ elif env['PLATFORM'] == 'darwin':
         if not GetOption('app'):
             LibList += [["jack", "jack/jack.h"]]
 
-        env.Append(FRAMEWORKS = ['GLUT', 'OpenGL', 'CoreAudio' ,'PLT_MzScheme'],
+        env.Append(FRAMEWORKS = ['GLUT', 'OpenGL', 'CoreAudio' ,'PLT_MrEd'],
                 FRAMEWORKPATH = [PLTLib])
 
 ################################################################################
