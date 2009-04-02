@@ -99,6 +99,14 @@ need to build and install Fluxus with
 scons MULTITEXTURE=0 GLSL=0
 sudo scons MULTITEXTURE=0 GLSL=0 install
 
+It is also possible to build an OSX application of Fluxus by typing:
+
+scons --app
+./macos/osx_app-postbuild.sh
+
+Please note that at the time of writing the application only works if it is
+copied to the /Applications folder.
+
 
 Using fluxus
 ------------

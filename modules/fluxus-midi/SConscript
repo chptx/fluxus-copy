@@ -21,10 +21,6 @@ if env['PLATFORM'] == 'posix':
 	Libs =  ['pthread', 'asound']
 	Frameworks = []
 	env.Append(CCFLAGS = ' -D__LINUX_ALSASEQ__')
-elif env['PLATFORM'] == 'darwin' and GetOption('app'):
-	Libs = []
-	env.Append(CCFLAGS = ' -D__MACOSX_CORE__')
-	Frameworks = ['CoreMidi', 'CoreAudio', 'CoreFoundation', 'PLT_MzScheme']
 elif env['PLATFORM'] == 'darwin':
 	Libs = []
 	env.Append(CCFLAGS = ' -D__MACOSX_CORE__')
