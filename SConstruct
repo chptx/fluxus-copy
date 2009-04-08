@@ -12,7 +12,7 @@ MajorVersion = "0"
 MinorVersion = "16"
 FluxusVersion = MajorVersion+MinorVersion
 # remember to change fluxa too...
-Target = "fluxus-0.16"
+Target = "fluxus"
 
 # changed prefix and pltprefix so they can be invoked at runtime
 # like scons Prefix=/usr PLTPrefix=/usr instead of default /usr/local
@@ -272,7 +272,7 @@ if env['PLATFORM'] == 'darwin' and GetOption('app'):
         frameworks = [ '/Library/Frameworks/Jackmp.framework']
         dylibs = [ '/opt/local/lib/liblo.dylib']
         env.Alias('app', env.MakeBundle('Fluxa.app',
-                                        'fluxa/fluxa-0.16',
+                                        'fluxa/fluxa',
                                         'key',
                                         'macos/fluxa-Info.plist',
                                         dylibs = dylibs,
