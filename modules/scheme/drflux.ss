@@ -16,6 +16,13 @@
 #lang scheme/base
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; execute the USER CONFIG SCRIPT, if it exists PRIOR to loading everything
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define user-script (string-append (getenv "HOME") "/.fluxus.scm"))
+(when (file-exists? user-script)
+  (load user-script))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; from boot.scm
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -61,10 +68,6 @@
 ;; for compatibility pre 0.15
 (define build-line build-ribbon)
 
-; execute the user config script, if it exists
-(define user-script (string-append (getenv "HOME") "/.fluxus.scm"))
-(when (file-exists? user-script)
-  (load user-script))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Fluxus Application section
