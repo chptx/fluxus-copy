@@ -44,6 +44,34 @@ void jackShutdown(void *arg) {
   }
 }
 
+// StartSectionDoc-en
+// fluxus-sonotopy
+// This module integrates with Sonotopy, a library for perceptually
+// analyzing an acoustic signal in real time, e.g. for visualization
+// of music. Sonotopy consists of methods to extract high-level
+// features from an acoustic waveform. These numeric feature values
+// can be interpreted as e.g. shapes, colors or motion parameters.
+// fluxus-sonotopy acts as a layer between Jack, Sonotopy and Fluxus.
+// Example:
+// (init-sonotopy)
+// (require racket/math)
+// (define (render)
+//  (rotate (vector 90 (* 360 (/ (vane) (* pi 2))) 0))
+//  (scale (vector (beat) 0.1 0.1))
+//  (translate (vector 0.5 0 0))
+//  (draw-cube))
+// (every-frame (render))
+// EndSectionDoc
+
+// StartFunctionDoc-en
+// init-sonotopy jackport-string
+// Returns: void
+// Description:
+// Initializes fluxus-sonotopy by connecting to jack. jackport is an optional name specifying a port to connect to; if unspecified, the user needs to connect manually.
+// Example:
+// (init-sonotopy "system:capture_1")
+// EndFunctionDoc
+
 Scheme_Object *init_sonotopy(int argc, Scheme_Object **argv) {
   bool connect = false;
   char *jackSourcePort = NULL;
@@ -91,12 +119,41 @@ Scheme_Object *init_sonotopy(int argc, Scheme_Object **argv) {
   return scheme_void;
 }
 
+
+// StartFunctionDoc-en
+// vane
+// Returns: float
+// Description:
+// Returns an angular value representing the current "direction" of
+// the audio input. The value is related to a continously updated
+// sonotopic map of recently encountered audio. The output is expected
+// to roughly reflect musical and harmonic dynamics. It can be used
+// e.g. to control movement. Range: -2*pi to 2*pi.
+// Example:
+// (rotate (vector 90 (* 360 (/ (vane) (* pi 2))) 0))
+// (draw-cube)
+// EndFunctionDoc
+
 Scheme_Object *get_vane_angle(int argc, Scheme_Object **argv) {
   float angle = 0.0f;
   if(sonotopyInterface != NULL)
     angle = sonotopyInterface->getVaneAngle();
   return scheme_make_float(angle);
 }
+
+
+// StartFunctionDoc-en
+// beat
+// Returns: float
+// Description:
+// Returns a value from 0 to 1 representing the current "beat
+// intensity" of the audio input. Rhythmic events such as drum hits
+// are expected to yield high values. By contrast, low values are
+// yielded by silence and other monotonous sounds.
+// Example:
+// (scale (vector (beat) 0.1 0.1))
+// (draw-cube)
+// EndFunctionDoc
 
 Scheme_Object *get_beat_intensity(int argc, Scheme_Object **argv) {
   float beat_intensity = 0.0f;
@@ -105,12 +162,33 @@ Scheme_Object *get_beat_intensity(int argc, Scheme_Object **argv) {
   return scheme_make_float(beat_intensity);
 }
 
+
+
+// StartFunctionDoc-en
+// get-num-spectrum-bins
+// Returns: integer
+// Description:
+// Returns the number of spectrum bins, whose contents can be retrieved by (spectrum-bin).
+// Example:
+// (get-num-spectrum-bins)
+// EndFunctionDoc
+
 Scheme_Object *get_num_spectrum_bins(int argc, Scheme_Object **argv) {
   int num_bins = 0;
   if(sonotopyInterface != NULL)
     num_bins = sonotopyInterface->getNumSpectrumBins();
   return scheme_make_integer_value(num_bins);
 }
+
+
+// StartFunctionDoc-en
+// spectrum-bin
+// Returns: float
+// Description:
+// Returns the current total power of frequencies in bin number n, where 0 <= n < (get-num-spectrum-bins). Low n values represent low frequency bands.
+// Example:
+// (spectrum-bin 1)
+// EndFunctionDoc
 
 Scheme_Object *get_spectrum_bin_value(int argc, Scheme_Object **argv) {
   MZ_GC_DECL_REG(1);
@@ -123,6 +201,7 @@ Scheme_Object *get_spectrum_bin_value(int argc, Scheme_Object **argv) {
   MZ_GC_UNREG();
   return scheme_make_float(value);
 }
+
 
 /////////////////////
 

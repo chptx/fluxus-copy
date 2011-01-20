@@ -1,0 +1,12 @@
+FLUXUS-SONOTOPY
+
+This module integrates with Sonotopy, a library for perceptually
+analyzing an acoustic signal in real time, e.g. for visualization of
+music. Sonotopy consists of methods to extract high-level features
+from an acoustic waveform. These numeric feature values can be
+interpreted as e.g. shapes, colors or motion parameters.
+fluxus-sonotopy acts as a layer between Jack, Sonotopy and Fluxus.
+For examples, see the examples/ directory.
+
+To download Sonotopy or read about the library, see
+https://github.com/alex-berman/sonotopy
