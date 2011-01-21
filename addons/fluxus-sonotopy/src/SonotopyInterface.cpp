@@ -28,6 +28,12 @@ SonotopyInterface::SonotopyInterface(int sampleRate, int bufferSize) {
   vane = new Vane(audioParameters);
   beatTracker = new BeatTracker(spectrumBinDivider->getNumBins(), bufferSize, sampleRate);
 
+  gridMapCircuit = new GridMapCircuit(audioParameters, gridMapCircuitParameters);
+  gridMapActivationPattern = gridMapCircuit->getActivationPattern();
+  gridTopology = (RectGridTopology*) gridMapCircuit->getSonogramMap()->getTopology();
+  gridMapWidth = gridTopology->getGridWidth();
+  gridMapHeight = gridTopology->getGridHeight();
+
   waveformCircularBuffer = NULL;
   waveformBuffer = NULL;
   numWaveformFrames = 0;
@@ -38,6 +44,7 @@ SonotopyInterface::~SonotopyInterface() {
   delete beatTracker;
   delete spectrumBinDivider;
   delete spectrumAnalyzer;
+  delete gridMapCircuit;
   if(waveformCircularBuffer != NULL)
     delete waveformCircularBuffer;
   if(waveformBuffer != NULL)
@@ -49,6 +56,7 @@ void SonotopyInterface::feedAudio(const float *buffer, unsigned long numFrames) 
   spectrumBinDivider->feedSpectrum(spectrumAnalyzer->getSpectrum(), numFrames);
   beatTracker->feedFeatureVector(spectrumBinDivider->getBinValues());
   vane->feedAudio(buffer, numFrames);
+  gridMapCircuit->feedAudio(buffer, numFrames);
   if(waveformCircularBuffer != NULL) {
     waveformCircularBuffer->write(numFrames, buffer);
     waveformCircularBuffer->moveReadHead(numFrames);
@@ -103,4 +111,25 @@ const float *SonotopyInterface::getWaveformBuffer() {
   if(waveformCircularBuffer != NULL)
     waveformCircularBuffer->read(numWaveformFrames, waveformBuffer);
   return waveformBuffer;
+}
+
+unsigned int SonotopyInterface::getGridMapWidth() {
+  return gridMapWidth;
+}
+
+unsigned int SonotopyInterface::getGridMapHeight() {
+  return gridMapHeight;
+}
+
+const SonogramMap::ActivationPattern* SonotopyInterface::getGridMapActivationPattern() {
+  gridMapCircuit->getSonogramMap()->getActivationPattern(gridMapActivationPattern);
+  return gridMapCircuit->getActivationPattern();
+}
+
+float SonotopyInterface::getGridMapActivation(unsigned int x, unsigned int y) {
+  if(x >= gridMapWidth) return 0.0f;
+  if(y >= gridMapHeight) return 0.0f;
+  unsigned int id = gridTopology->gridCoordinatesToId(x, y);
+  gridMapCircuit->getSonogramMap()->getActivationPattern(gridMapActivationPattern);
+  return (*gridMapActivationPattern)[id];
 }

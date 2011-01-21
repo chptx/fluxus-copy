@@ -21,6 +21,7 @@
 #include "SchemeHelper.h"
 
 using namespace std;
+using namespace sonotopy;
 using namespace SchemeHelper;
 
 #undef MZ_GC_DECL_REG
@@ -295,6 +296,54 @@ Scheme_Object *get_waveform(int argc, Scheme_Object **argv) {
 }
 
 
+Scheme_Object *get_grid_activation(int argc, Scheme_Object **argv) {
+  DECL_ARGV();
+  ArgCheck("sonotopic-grid-node", "ii", argc, argv);
+  float value = 0.0f;
+  if(sonotopyInterface != NULL) {
+    unsigned int x = IntFromScheme(argv[0]);
+    unsigned int y = IntFromScheme(argv[1]);
+    value = sonotopyInterface->getGridMapActivation(x, y);
+  }
+  MZ_GC_UNREG();
+  return scheme_make_float(value);
+}
+
+Scheme_Object *get_grid_activation_pattern(int argc, Scheme_Object **argv) {
+  Scheme_Object *result = NULL;
+  Scheme_Object *tmprow = NULL;
+  Scheme_Object *tmpnode = NULL;
+  MZ_GC_DECL_REG(3);
+  MZ_GC_VAR_IN_REG(0, result);
+  MZ_GC_VAR_IN_REG(1, tmprow);
+  MZ_GC_VAR_IN_REG(2, tmpnode);
+  MZ_GC_REG();
+
+  unsigned int gridMapWidth = sonotopyInterface->getGridMapWidth();
+  unsigned int gridMapHeight = sonotopyInterface->getGridMapHeight();
+
+  result = scheme_make_vector(gridMapHeight, scheme_void);
+
+  if(sonotopyInterface != NULL) {
+    const SonogramMap::ActivationPattern *activationPattern =
+      sonotopyInterface->getGridMapActivationPattern();
+    SonogramMap::ActivationPattern::const_iterator activationPatternIterator =
+      activationPattern->begin();
+    for(unsigned int y = 0; y < gridMapHeight; y++) {
+      tmprow = scheme_make_vector(gridMapWidth, scheme_void);
+      for(unsigned int x = 0; x < gridMapWidth; x++) {
+	tmpnode = scheme_make_float(*activationPatternIterator++);
+	SCHEME_VEC_ELS(tmprow)[x] = tmpnode;
+      }
+      SCHEME_VEC_ELS(result)[y] = tmprow;
+    }
+  }
+
+  MZ_GC_UNREG();
+  return result;
+}
+  
+
 /////////////////////
 
 #ifdef STATIC_LINK
@@ -327,6 +376,10 @@ Scheme_Object *scheme_reload(Scheme_Env *env)
 		    scheme_make_prim_w_arity(get_num_waveform_frames, "get-num-waveform-frames", 0, 0), menv);
   scheme_add_global("waveform",
 		    scheme_make_prim_w_arity(get_waveform, "waveform", 0, 0), menv);
+  scheme_add_global("sonotopic-grid",
+		    scheme_make_prim_w_arity(get_grid_activation_pattern, "sonotopic-grid", 0, 0), menv);
+  scheme_add_global("sonotopic-grid-node",
+		    scheme_make_prim_w_arity(get_grid_activation, "sonotopic-grid-node", 2, 2), menv);
 
   scheme_finish_primitive_module(menv);
   MZ_GC_UNREG();
