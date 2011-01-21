@@ -25,12 +25,18 @@ class SonotopyInterface {
   float getBeatIntensity();
   int getNumSpectrumBins();
   float getSpectrumBinValue(int bin);
+  void setWaveformWindowSize(float secs);
+  int getNumWaveformFrames();
+  const float *getWaveformBuffer();
 
  private:
   sonotopy::Vane *vane;
   sonotopy::BeatTracker *beatTracker;
   sonotopy::SpectrumAnalyzer *spectrumAnalyzer;
   sonotopy::SpectrumBinDivider *spectrumBinDivider;
+  sonotopy::CircularBuffer<float> *waveformCircularBuffer;
+  float *waveformBuffer;
+  int numWaveformFrames;
   sonotopy::AudioParameters audioParameters;
   sonotopy::Normalizer normalizer;
 };

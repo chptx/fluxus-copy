@@ -27,6 +27,10 @@ SonotopyInterface::SonotopyInterface(int sampleRate, int bufferSize) {
                                               spectrumAnalyzer->getSpectrumResolution());
   vane = new Vane(audioParameters);
   beatTracker = new BeatTracker(spectrumBinDivider->getNumBins(), bufferSize, sampleRate);
+
+  waveformCircularBuffer = NULL;
+  waveformBuffer = NULL;
+  numWaveformFrames = 0;
 }
 
 SonotopyInterface::~SonotopyInterface() {
@@ -34,6 +38,10 @@ SonotopyInterface::~SonotopyInterface() {
   delete beatTracker;
   delete spectrumBinDivider;
   delete spectrumAnalyzer;
+  if(waveformCircularBuffer != NULL)
+    delete waveformCircularBuffer;
+  if(waveformBuffer != NULL)
+    delete [] waveformBuffer;
 }
 
 void SonotopyInterface::feedAudio(const float *buffer, unsigned long numFrames) {
@@ -41,6 +49,10 @@ void SonotopyInterface::feedAudio(const float *buffer, unsigned long numFrames) 
   spectrumBinDivider->feedSpectrum(spectrumAnalyzer->getSpectrum(), numFrames);
   beatTracker->feedFeatureVector(spectrumBinDivider->getBinValues());
   vane->feedAudio(buffer, numFrames);
+  if(waveformCircularBuffer != NULL) {
+    waveformCircularBuffer->write(numFrames, buffer);
+    waveformCircularBuffer->moveReadHead(numFrames);
+  }
 }
 
 float SonotopyInterface::getVaneAngle() {
@@ -62,4 +74,33 @@ float SonotopyInterface::getSpectrumBinValue(int bin) {
     const float *binValues = spectrumBinDivider->getBinValues();
     return normalizer.normalize(binValues[bin]);
   }
+}
+
+void SonotopyInterface::setWaveformWindowSize(float secs) {
+  int newNumWaveformFrames = (int) (audioParameters.sampleRate * secs);
+  if(waveformCircularBuffer != NULL) {
+    if(newNumWaveformFrames != numWaveformFrames) {
+      delete waveformCircularBuffer;
+      waveformCircularBuffer = NULL;
+      delete [] waveformBuffer;
+      waveformBuffer = NULL;
+      numWaveformFrames = 0;
+    }
+  }
+
+  if(waveformCircularBuffer == NULL) {
+    numWaveformFrames = newNumWaveformFrames;
+    waveformCircularBuffer = new CircularBuffer<float>(numWaveformFrames);
+    waveformBuffer = new float [numWaveformFrames];
+  }
+}
+
+int SonotopyInterface::getNumWaveformFrames() {
+  return numWaveformFrames;
+}
+
+const float *SonotopyInterface::getWaveformBuffer() {
+  if(waveformCircularBuffer != NULL)
+    waveformCircularBuffer->read(numWaveformFrames, waveformBuffer);
+  return waveformBuffer;
 }

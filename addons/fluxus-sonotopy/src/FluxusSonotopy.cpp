@@ -185,7 +185,9 @@ Scheme_Object *get_num_spectrum_bins(int argc, Scheme_Object **argv) {
 // spectrum-bin
 // Returns: float
 // Description:
-// Returns the current total power of frequencies in bin number n, where 0 <= n < (get-num-spectrum-bins). Low n values represent low frequency bands.
+// Returns the current total power of frequencies in bin number n,
+// where 0 <= n < (get-num-spectrum-bins). Low n values represent low
+// frequency bands.
 // Example:
 // (spectrum-bin 1)
 // EndFunctionDoc
@@ -200,6 +202,98 @@ Scheme_Object *get_spectrum_bin_value(int argc, Scheme_Object **argv) {
     value = sonotopyInterface->getSpectrumBinValue((int)scheme_real_to_double(argv[0]));
   MZ_GC_UNREG();
   return scheme_make_float(value);
+}
+
+
+// StartFunctionDoc-en
+// set-waveform-window-size secs-float
+// Returns: void
+// Description:
+// Sets the size of the waveform window, measured in seconds. See
+// (waveform). Higher values yield a larger window and thus a slower
+// movement of the waveform.
+// Example:
+// (set-waveform-window-size 0.1)
+// EndFunctionDoc
+
+Scheme_Object *set_waveform_window_size(int argc, Scheme_Object **argv) {
+  MZ_GC_DECL_REG(1);
+  MZ_GC_VAR_IN_REG(0, argv);
+  MZ_GC_REG();
+  if(!SCHEME_NUMBERP(argv[0])) scheme_wrong_type("set-waveform-window-size", "number", 0, argc, argv);
+  if(sonotopyInterface != NULL)
+    sonotopyInterface->setWaveformWindowSize(scheme_real_to_double(argv[0]));
+  MZ_GC_UNREG();
+  return scheme_void;
+}
+
+
+// StartFunctionDoc-en
+// get-num-waveform-frames
+// Returns: integer
+// Description:
+// Returns the size of the waveform window, measured in audio
+// frames. This equals the size of the vector return by (waveform).
+// Example:
+// (get-num-waveform-frames)
+// EndFunctionDoc
+
+Scheme_Object *get_num_waveform_frames(int argc, Scheme_Object **argv) {
+  int num_frames = 0;
+  if(sonotopyInterface != NULL)
+    num_frames = sonotopyInterface->getNumWaveformFrames();
+  return scheme_make_integer_value(num_frames);
+}
+
+
+// StartFunctionDoc-en
+// waveform
+// Returns: audio-buffer-vector
+// Description:
+// Returns the waveform (sample values) of the most recent audio
+// input, as a vector of float values. The amount of time represented
+// by this window is set with (set-waveform-window-size).
+// Example:
+// (set-waveform-window-size 0.1)
+// 
+// (clear)
+// (define p (build-ribbon (get-num-waveform-frames)))
+// (with-primitive p
+//    (hint-unlit)
+//    (pdata-map! (lambda (w) .01) "w"))
+// 
+// (every-frame
+//    (let ([a (waveform)])
+//        (with-primitive p
+//            (pdata-index-map!
+//                (lambda (i p)
+//                    (vector (* .005 (- i (/ (pdata-size) 2))) (* 1 (vector-ref a i)) 0))
+//                "p"))))
+// EndFunctionDoc
+
+Scheme_Object *get_waveform(int argc, Scheme_Object **argv) {
+  Scheme_Object *result = NULL;
+  Scheme_Object *tmp = NULL;
+  MZ_GC_DECL_REG(2);
+  MZ_GC_VAR_IN_REG(0, result);
+  MZ_GC_VAR_IN_REG(1, tmp);
+  MZ_GC_REG();
+  
+  if(sonotopyInterface != NULL) {
+    int num_frames = sonotopyInterface->getNumWaveformFrames();
+    result = scheme_make_vector(num_frames, scheme_void);
+    const float *p = sonotopyInterface->getWaveformBuffer();
+    for (int n = 0; n < num_frames; n++) {
+      tmp = scheme_make_float(*p++);
+      SCHEME_VEC_ELS(result)[n] = tmp;
+    }
+  }
+  else {
+    result = scheme_make_vector(0, scheme_void);
+  }
+
+  MZ_GC_UNREG();
+  return result;
 }
 
 
@@ -219,11 +313,22 @@ Scheme_Object *scheme_reload(Scheme_Env *env)
 
   menv=scheme_primitive_module(scheme_intern_symbol("fluxus-sonotopy"), env);
 
-  scheme_add_global("init-sonotopy", scheme_make_prim_w_arity(init_sonotopy, "init-sonotopy", 0, 1), menv);
-  scheme_add_global("vane", scheme_make_prim_w_arity(get_vane_angle, "vane", 0, 0), menv);
-  scheme_add_global("beat", scheme_make_prim_w_arity(get_beat_intensity, "beat", 0, 0), menv);
-  scheme_add_global("get-num-spectrum-bins", scheme_make_prim_w_arity(get_num_spectrum_bins, "get-num-spectrum-bins", 0, 0), menv);
-  scheme_add_global("spectrum-bin", scheme_make_prim_w_arity(get_spectrum_bin_value, "spectrum-bin", 1, 1), menv);
+  scheme_add_global("init-sonotopy",
+		    scheme_make_prim_w_arity(init_sonotopy, "init-sonotopy", 0, 1), menv);
+  scheme_add_global("vane",
+		    scheme_make_prim_w_arity(get_vane_angle, "vane", 0, 0), menv);
+  scheme_add_global("beat",
+		    scheme_make_prim_w_arity(get_beat_intensity, "beat", 0, 0), menv);
+  scheme_add_global("get-num-spectrum-bins",
+		    scheme_make_prim_w_arity(get_num_spectrum_bins, "get-num-spectrum-bins", 0, 0), menv);
+  scheme_add_global("spectrum-bin",
+		    scheme_make_prim_w_arity(get_spectrum_bin_value, "spectrum-bin", 1, 1), menv);
+  scheme_add_global("set-waveform-window-size",
+		    scheme_make_prim_w_arity(set_waveform_window_size, "set-waveform-window-size", 1, 1), menv);
+  scheme_add_global("get-num-waveform-frames",
+		    scheme_make_prim_w_arity(get_num_waveform_frames, "get-num-waveform-frames", 0, 0), menv);
+  scheme_add_global("waveform",
+		    scheme_make_prim_w_arity(get_waveform, "waveform", 0, 0), menv);
 
   scheme_finish_primitive_module(menv);
   MZ_GC_UNREG();
