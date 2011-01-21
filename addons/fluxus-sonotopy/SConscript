@@ -38,7 +38,8 @@ if not GetOption('clean'):
 	Libs += [rec[0] for rec in LibList]
 
 Source = Split("src/FluxusSonotopy.cpp \
-		src/SonotopyInterface.cpp") + \
+		src/SonotopyInterface.cpp \
+                src/SchemeHelper.cpp") + \
 		[MZDYN]
 		
 if Requirements:

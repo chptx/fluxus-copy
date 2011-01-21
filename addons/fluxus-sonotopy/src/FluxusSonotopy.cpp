@@ -18,6 +18,10 @@
 #include <iostream>
 #include <jack/jack.h>
 #include "SonotopyInterface.h"
+#include "SchemeHelper.h"
+
+using namespace std;
+using namespace SchemeHelper;
 
 #undef MZ_GC_DECL_REG
 #undef MZ_GC_UNREG
@@ -74,13 +78,11 @@ void jackShutdown(void *arg) {
 
 Scheme_Object *init_sonotopy(int argc, Scheme_Object **argv) {
   bool connect = false;
-  char *jackSourcePort = NULL;
-  MZ_GC_DECL_REG(1);
-  MZ_GC_VAR_IN_REG(0, argv);
-  MZ_GC_REG();
+  string jackSourcePort;
+  DECL_ARGV();
   if(argc == 1) {
-    if(!SCHEME_CHAR_STRINGP(argv[0])) scheme_wrong_type("start-audio", "string", 0, argc, argv);
-    jackSourcePort = scheme_utf8_encode_to_buffer(SCHEME_CHAR_STR_VAL(argv[0]),SCHEME_CHAR_STRLEN_VAL(argv[0]),NULL,0);
+    ArgCheck("init-sonotopy", "s", argc, argv);
+    jackSourcePort = StringFromScheme(argv[0]);
     connect = true;
   }
 
@@ -106,7 +108,7 @@ Scheme_Object *init_sonotopy(int argc, Scheme_Object **argv) {
       if(jack_activate(jackClient) == 0) {
 	jackActivated = true;
 	if(connect) {
-	  if(jack_connect(jackClient, jackSourcePort, jack_port_name(jackInputPort)) != 0)
+	  if(jack_connect(jackClient, jackSourcePort.c_str(), jack_port_name(jackInputPort)) != 0)
 	    std::cerr << "Failed to connect to jack port " << jackSourcePort << std::endl;
 	}
       }
@@ -193,13 +195,11 @@ Scheme_Object *get_num_spectrum_bins(int argc, Scheme_Object **argv) {
 // EndFunctionDoc
 
 Scheme_Object *get_spectrum_bin_value(int argc, Scheme_Object **argv) {
-  MZ_GC_DECL_REG(1);
-  MZ_GC_VAR_IN_REG(0, argv);
-  MZ_GC_REG();
-  if(!SCHEME_NUMBERP(argv[0])) scheme_wrong_type("spectrum-bin", "number", 0, argc, argv);
+  DECL_ARGV();
+  ArgCheck("spectrum-bin", "f", argc, argv);
   float value = 0.0f;
   if(sonotopyInterface != NULL)
-    value = sonotopyInterface->getSpectrumBinValue((int)scheme_real_to_double(argv[0]));
+    value = sonotopyInterface->getSpectrumBinValue(FloatFromScheme(argv[0]));
   MZ_GC_UNREG();
   return scheme_make_float(value);
 }
@@ -217,12 +217,10 @@ Scheme_Object *get_spectrum_bin_value(int argc, Scheme_Object **argv) {
 // EndFunctionDoc
 
 Scheme_Object *set_waveform_window_size(int argc, Scheme_Object **argv) {
-  MZ_GC_DECL_REG(1);
-  MZ_GC_VAR_IN_REG(0, argv);
-  MZ_GC_REG();
-  if(!SCHEME_NUMBERP(argv[0])) scheme_wrong_type("set-waveform-window-size", "number", 0, argc, argv);
+  DECL_ARGV();
+  ArgCheck("set-waveform-window-size", "f", argc, argv);
   if(sonotopyInterface != NULL)
-    sonotopyInterface->setWaveformWindowSize(scheme_real_to_double(argv[0]));
+    sonotopyInterface->setWaveformWindowSize(FloatFromScheme(argv[0]));
   MZ_GC_UNREG();
   return scheme_void;
 }
