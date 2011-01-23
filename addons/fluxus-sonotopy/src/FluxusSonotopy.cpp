@@ -24,11 +24,6 @@ using namespace std;
 using namespace sonotopy;
 using namespace SchemeHelper;
 
-#undef MZ_GC_DECL_REG
-#undef MZ_GC_UNREG
-#define MZ_GC_DECL_REG(size) void *__gc_var_stack__[size+2] = { (void*)0, (void*)size };
-#define MZ_GC_UNREG() (GC_variable_stack = (void**)__gc_var_stack__[0])
-
 jack_client_t *jackClient = NULL;
 bool jackActivated = false;
 jack_port_t *jackInputPort;
@@ -72,7 +67,9 @@ void jackShutdown(void *arg) {
 // init-sonotopy jackport-string
 // Returns: void
 // Description:
-// Initializes fluxus-sonotopy by connecting to jack. jackport is an optional name specifying a port to connect to; if unspecified, the user needs to connect manually.
+// Initializes fluxus-sonotopy by connecting to jack. jackport is an
+// optional name specifying a port to connect to; if unspecified, the
+// user needs to connect manually.
 // Example:
 // (init-sonotopy "system:capture_1")
 // EndFunctionDoc
@@ -254,13 +251,13 @@ Scheme_Object *get_num_waveform_frames(int argc, Scheme_Object **argv) {
 // by this window is set with (set-waveform-window-size).
 // Example:
 // (set-waveform-window-size 0.1)
-// 
+//
 // (clear)
 // (define p (build-ribbon (get-num-waveform-frames)))
 // (with-primitive p
 //    (hint-unlit)
 //    (pdata-map! (lambda (w) .01) "w"))
-// 
+//
 // (every-frame
 //    (let ([a (waveform)])
 //        (with-primitive p
@@ -277,7 +274,7 @@ Scheme_Object *get_waveform(int argc, Scheme_Object **argv) {
   MZ_GC_VAR_IN_REG(0, result);
   MZ_GC_VAR_IN_REG(1, tmp);
   MZ_GC_REG();
-  
+
   if(sonotopyInterface != NULL) {
     int num_frames = sonotopyInterface->getNumWaveformFrames();
     result = scheme_make_vector(num_frames, scheme_void);
@@ -293,6 +290,36 @@ Scheme_Object *get_waveform(int argc, Scheme_Object **argv) {
 
   MZ_GC_UNREG();
   return result;
+}
+
+
+// StartFunctionDoc-en
+// get-sonotopic-grid-width
+// Returns: integer
+// Description:
+// Example:
+// EndFunctionDoc
+
+Scheme_Object *get_sonotopic_grid_width(int argc, Scheme_Object **argv) {
+  unsigned width = 0;
+  if(sonotopyInterface != NULL)
+    width = sonotopyInterface->getGridMapWidth();
+  return scheme_make_integer_value(width);
+}
+
+
+// StartFunctionDoc-en
+// get-sonotopic-grid-height
+// Returns: integer
+// Description:
+// Example:
+// EndFunctionDoc
+
+Scheme_Object *get_sonotopic_grid_height(int argc, Scheme_Object **argv) {
+  unsigned height = 0;
+  if(sonotopyInterface != NULL)
+    height = sonotopyInterface->getGridMapWidth();
+  return scheme_make_integer_value(height);
 }
 
 
@@ -342,7 +369,7 @@ Scheme_Object *get_grid_activation_pattern(int argc, Scheme_Object **argv) {
   MZ_GC_UNREG();
   return result;
 }
-  
+
 
 /////////////////////
 
@@ -376,6 +403,10 @@ Scheme_Object *scheme_reload(Scheme_Env *env)
 		    scheme_make_prim_w_arity(get_num_waveform_frames, "get-num-waveform-frames", 0, 0), menv);
   scheme_add_global("waveform",
 		    scheme_make_prim_w_arity(get_waveform, "waveform", 0, 0), menv);
+  scheme_add_global("get-sonotopic-grid-width",
+		    scheme_make_prim_w_arity(get_sonotopic_grid_width, "get-sonotopic-grid-width", 0, 0), menv);
+  scheme_add_global("get-sonotopic-grid-height",
+		    scheme_make_prim_w_arity(get_sonotopic_grid_height, "get-sonotopic-grid-height", 0, 0), menv);
   scheme_add_global("sonotopic-grid",
 		    scheme_make_prim_w_arity(get_grid_activation_pattern, "sonotopic-grid", 0, 0), menv);
   scheme_add_global("sonotopic-grid-node",
