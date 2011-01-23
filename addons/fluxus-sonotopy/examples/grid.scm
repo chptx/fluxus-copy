@@ -1,3 +1,4 @@
+(require racket/vector)
 (require fluxus-017/fluxus-sonotopy)
 
 (clear)
@@ -11,14 +12,18 @@
 (define sh (get-sonotopic-grid-height))
 (define p (build-pixels sw sh))
 
+; flattens the 2d sonotopic grid
+(define (vector2d->vector1d v)
+    (apply vector-append (vector->list v)))
+
 (define (render)
-    (let ([grid (sonotopic-grid)])
+    (let ([grid (vector2d->vector1d (sonotopic-grid))])
         (with-primitive p
             (pdata-index-map!
                 (lambda (i c)
-                    (let-values ([(y x) (quotient/remainder i sw)])
-                        (vector-ref (vector-ref grid y) x)))
+                  (vector-ref grid i))
                 "c")
             (pixels-upload))))
 
 (every-frame (render))
+
