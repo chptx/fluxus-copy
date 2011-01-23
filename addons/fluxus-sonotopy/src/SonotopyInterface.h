@@ -43,7 +43,6 @@ class SonotopyInterface {
   int numWaveformFrames;
   sonotopy::GridMapCircuit *gridMapCircuit;
   sonotopy::GridMapCircuitParameters gridMapCircuitParameters;
-  sonotopy::RectGridTopology* gridTopology;
   unsigned int gridMapWidth, gridMapHeight;
   sonotopy::SonogramMap::ActivationPattern *gridMapActivationPattern;
   sonotopy::AudioParameters audioParameters;
