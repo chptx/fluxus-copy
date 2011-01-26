@@ -318,7 +318,7 @@ Scheme_Object *get_sonotopic_grid_width(int argc, Scheme_Object **argv) {
 Scheme_Object *get_sonotopic_grid_height(int argc, Scheme_Object **argv) {
   unsigned height = 0;
   if(sonotopyInterface != NULL)
-    height = sonotopyInterface->getGridMapWidth();
+    height = sonotopyInterface->getGridMapHeight();
   return scheme_make_integer_value(height);
 }
 
@@ -352,9 +352,9 @@ Scheme_Object *get_grid_activation_pattern(int argc, Scheme_Object **argv) {
   result = scheme_make_vector(gridMapHeight, scheme_void);
 
   if(sonotopyInterface != NULL) {
-    const SonogramMap::ActivationPattern *activationPattern =
+    const SpectrumMap::ActivationPattern *activationPattern =
       sonotopyInterface->getGridMapActivationPattern();
-    SonogramMap::ActivationPattern::const_iterator activationPatternIterator =
+    SpectrumMap::ActivationPattern::const_iterator activationPatternIterator =
       activationPattern->begin();
     for(unsigned int y = 0; y < gridMapHeight; y++) {
       tmprow = scheme_make_vector(gridMapWidth, scheme_void);

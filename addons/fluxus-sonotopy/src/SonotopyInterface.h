@@ -29,7 +29,7 @@ class SonotopyInterface {
   int getNumWaveformFrames();
   const float *getWaveformBuffer();
   float getGridMapActivation(unsigned int x, unsigned int y);
-  const sonotopy::SonogramMap::ActivationPattern* getGridMapActivationPattern();
+  const sonotopy::SpectrumMap::ActivationPattern* getGridMapActivationPattern();
   unsigned int getGridMapWidth();
   unsigned int getGridMapHeight();
 
@@ -44,7 +44,7 @@ class SonotopyInterface {
   sonotopy::GridMapCircuit *gridMapCircuit;
   sonotopy::GridMapCircuitParameters gridMapCircuitParameters;
   unsigned int gridMapWidth, gridMapHeight;
-  sonotopy::SonogramMap::ActivationPattern *gridMapActivationPattern;
+  sonotopy::SpectrumMap::ActivationPattern *gridMapActivationPattern;
   sonotopy::AudioParameters audioParameters;
   sonotopy::Normalizer normalizer;
 };

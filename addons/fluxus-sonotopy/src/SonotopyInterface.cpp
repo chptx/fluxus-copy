@@ -119,7 +119,7 @@ unsigned int SonotopyInterface::getGridMapHeight() {
   return gridMapHeight;
 }
 
-const SonogramMap::ActivationPattern* SonotopyInterface::getGridMapActivationPattern() {
+const SpectrumMap::ActivationPattern* SonotopyInterface::getGridMapActivationPattern() {
   return gridMapCircuit->getActivationPattern();
 }
 
