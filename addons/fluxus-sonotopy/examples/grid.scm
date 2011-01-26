@@ -11,6 +11,7 @@
 (define sw (get-sonotopic-grid-width))
 (define sh (get-sonotopic-grid-height))
 (define p (build-pixels sw sh))
+(define contrast 15.0)
 
 ; flattens the 2d sonotopic grid
 (define (vector2d->vector1d v)
@@ -21,7 +22,7 @@
         (with-primitive p
             (pdata-index-map!
                 (lambda (i c)
-                  (vector-ref grid i))
+                  (expt (vector-ref grid i) contrast))
                 "c")
             (pixels-upload))))
 
