@@ -32,6 +32,7 @@ class SonotopyInterface {
   const sonotopy::SpectrumMap::ActivationPattern* getGridMapActivationPattern();
   unsigned int getGridMapWidth();
   unsigned int getGridMapHeight();
+  void getGridWinnerPosition(float &x, float &y);
 
  private:
   sonotopy::Vane *vane;

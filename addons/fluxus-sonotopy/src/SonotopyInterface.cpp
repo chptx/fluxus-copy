@@ -128,3 +128,7 @@ float SonotopyInterface::getGridMapActivation(unsigned int x, unsigned int y) {
   if(y >= gridMapHeight) return 0.0f;
   return gridMapCircuit->getActivation(x, y);
 }
+
+void SonotopyInterface::getGridWinnerPosition(float &x, float &y) {
+  gridMapCircuit->getWinnerPosition(x, y);
+}

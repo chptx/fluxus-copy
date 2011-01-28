@@ -18,11 +18,11 @@
     (apply vector-append (vector->list v)))
 
 (define (render)
-    (let ([grid (vector2d->vector1d (sonotopic-grid))])
+    (let ([pattern (vector2d->vector1d (sonotopic-grid-pattern))])
         (with-primitive p
             (pdata-index-map!
                 (lambda (i c)
-                  (expt (vector-ref grid i) contrast))
+                  (expt (vector-ref pattern i) contrast))
                 "c")
             (pixels-upload))))
 

@@ -371,6 +371,22 @@ Scheme_Object *get_grid_activation_pattern(int argc, Scheme_Object **argv) {
 }
 
 
+Scheme_Object *get_grid_path_x(int argc, Scheme_Object **argv) {
+  float x = 0, y;
+  if(sonotopyInterface != NULL)
+    sonotopyInterface->getGridWinnerPosition(x, y);
+  return scheme_make_float(x);
+}
+
+Scheme_Object *get_grid_path_y(int argc, Scheme_Object **argv) {
+  float y = 0, x;
+  if(sonotopyInterface != NULL)
+    sonotopyInterface->getGridWinnerPosition(x, y);
+  return scheme_make_float(y);
+}
+
+
+
 /////////////////////
 
 #ifdef STATIC_LINK
@@ -407,10 +423,14 @@ Scheme_Object *scheme_reload(Scheme_Env *env)
 		    scheme_make_prim_w_arity(get_sonotopic_grid_width, "get-sonotopic-grid-width", 0, 0), menv);
   scheme_add_global("get-sonotopic-grid-height",
 		    scheme_make_prim_w_arity(get_sonotopic_grid_height, "get-sonotopic-grid-height", 0, 0), menv);
-  scheme_add_global("sonotopic-grid",
-		    scheme_make_prim_w_arity(get_grid_activation_pattern, "sonotopic-grid", 0, 0), menv);
+  scheme_add_global("sonotopic-grid-pattern",
+		    scheme_make_prim_w_arity(get_grid_activation_pattern, "sonotopic-grid-pattern", 0, 0), menv);
   scheme_add_global("sonotopic-grid-node",
 		    scheme_make_prim_w_arity(get_grid_activation, "sonotopic-grid-node", 2, 2), menv);
+  scheme_add_global("sonotopic-grid-path-x",
+		    scheme_make_prim_w_arity(get_grid_path_x, "sonotopic-grid-path-x", 0, 0), menv);
+  scheme_add_global("sonotopic-grid-path-y",
+		    scheme_make_prim_w_arity(get_grid_path_y, "sonotopic-grid-path-y", 0, 0), menv);
 
   scheme_finish_primitive_module(menv);
   MZ_GC_UNREG();
