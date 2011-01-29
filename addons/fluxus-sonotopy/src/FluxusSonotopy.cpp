@@ -125,10 +125,10 @@ Scheme_Object *init_sonotopy(int argc, Scheme_Object **argv) {
 // Returns: float
 // Description:
 // Returns an angular value representing the current "direction" of
-// the audio input. The value is related to a continously updated
-// sonotopic map of recently encountered audio. The output is expected
-// to roughly reflect musical and harmonic dynamics. It can be used
-// e.g. to control movement. Range: -2*pi to 2*pi.
+// the auditory input. The value is related to a continously updated
+// circular sonotopic map of recently encountered audio. The output is
+// expected to roughly reflect musical and harmonic dynamics. It can
+// be used e.g. to control movement. Range: -2*pi to 2*pi.
 // Example:
 // (rotate (vector 90 (* 360 (/ (vane) (* pi 2))) 0))
 // (draw-cube)
@@ -323,7 +323,17 @@ Scheme_Object *get_sonotopic_grid_height(int argc, Scheme_Object **argv) {
 }
 
 
-Scheme_Object *get_grid_activation(int argc, Scheme_Object **argv) {
+// StartFunctionDoc-en
+// sonotopic-grid-pattern-node x-int y-int
+// Returns: float
+// Description:
+// Returns the sonotopic grid pattern activation value at node
+// (x,y). For more information, see (sonotopic-grid-pattern).
+// Example:
+// (sonotopic-grid-pattern-node x y)
+// EndFunctionDoc
+
+Scheme_Object *get_grid_activation_in_node(int argc, Scheme_Object **argv) {
   DECL_ARGV();
   ArgCheck("sonotopic-grid-node", "ii", argc, argv);
   float value = 0.0f;
@@ -335,6 +345,21 @@ Scheme_Object *get_grid_activation(int argc, Scheme_Object **argv) {
   MZ_GC_UNREG();
   return scheme_make_float(value);
 }
+
+
+// StartFunctionDoc-en
+// sonotopic-grid-pattern
+// Returns: vector of vector of float
+// Description:
+// The activation pattern can be conceived of as an image or terrain
+// whose movements reflect the musical dynamics of the auditory
+// input. The pattern is related to a continously updated rectanglar
+// sonotopic map of recently encountered auditory input. The function
+// returns the activation pattern as a two-dimensional matrix
+// represented as a vector of vector of floats in the range 0-1.
+// Example:
+// see examples/grid-pattern.scm
+// EndFunctionDoc
 
 Scheme_Object *get_grid_activation_pattern(int argc, Scheme_Object **argv) {
   Scheme_Object *result = NULL;
@@ -371,18 +396,42 @@ Scheme_Object *get_grid_activation_pattern(int argc, Scheme_Object **argv) {
 }
 
 
-Scheme_Object *get_grid_path_x(int argc, Scheme_Object **argv) {
-  float x = 0, y;
-  if(sonotopyInterface != NULL)
-    sonotopyInterface->getGridWinnerPosition(x, y);
-  return scheme_make_float(x);
-}
+// StartFunctionDoc-en
+// sonotopic-grid-path
+// Returns: vector
+// Description:
+// Returns a vector representing a position in a 2-d surface. The
+// sequence of return values can be expected to constitute a path
+// along the surface. The path relates to the activation pattern of a
+// sonotopic grid; see also (sonotopic-grid-pattern). Coordinate
+// range: (0,0)-(1,1). The returned vector has the form #(x-coordinate
+// y-coordinate 0).
+// Example:
+// see examples/grid-path.scm
+// EndFunctionDoc
 
-Scheme_Object *get_grid_path_y(int argc, Scheme_Object **argv) {
-  float y = 0, x;
+Scheme_Object *get_grid_path(int argc, Scheme_Object **argv) {
+  Scheme_Object *result = NULL;
+  Scheme_Object *tmpnode = NULL;
+  MZ_GC_DECL_REG(2);
+  MZ_GC_VAR_IN_REG(0, result);
+  MZ_GC_VAR_IN_REG(1, tmpnode);
+  MZ_GC_REG();
+  result = scheme_make_vector(3, scheme_void);
+
+  float x = 0, y = 0;
   if(sonotopyInterface != NULL)
     sonotopyInterface->getGridWinnerPosition(x, y);
-  return scheme_make_float(y);
+
+  tmpnode = scheme_make_float(x);
+  SCHEME_VEC_ELS(result)[0] = tmpnode;
+  tmpnode = scheme_make_float(y);
+  SCHEME_VEC_ELS(result)[1] = tmpnode;
+  tmpnode = scheme_make_float(0);
+  SCHEME_VEC_ELS(result)[2] = tmpnode;
+
+  MZ_GC_UNREG();
+  return result;
 }
 
 
@@ -425,12 +474,10 @@ Scheme_Object *scheme_reload(Scheme_Env *env)
 		    scheme_make_prim_w_arity(get_sonotopic_grid_height, "get-sonotopic-grid-height", 0, 0), menv);
   scheme_add_global("sonotopic-grid-pattern",
 		    scheme_make_prim_w_arity(get_grid_activation_pattern, "sonotopic-grid-pattern", 0, 0), menv);
-  scheme_add_global("sonotopic-grid-node",
-		    scheme_make_prim_w_arity(get_grid_activation, "sonotopic-grid-node", 2, 2), menv);
-  scheme_add_global("sonotopic-grid-path-x",
-		    scheme_make_prim_w_arity(get_grid_path_x, "sonotopic-grid-path-x", 0, 0), menv);
-  scheme_add_global("sonotopic-grid-path-y",
-		    scheme_make_prim_w_arity(get_grid_path_y, "sonotopic-grid-path-y", 0, 0), menv);
+  scheme_add_global("sonotopic-grid-pattern-node",
+		    scheme_make_prim_w_arity(get_grid_activation_in_node, "sonotopic-grid-pattern-node", 2, 2), menv);
+  scheme_add_global("sonotopic-grid-path",
+		    scheme_make_prim_w_arity(get_grid_path, "sonotopic-grid-path", 0, 0), menv);
 
   scheme_finish_primitive_module(menv);
   MZ_GC_UNREG();

@@ -27,6 +27,6 @@
      "p")))
 
 (define (render)
-  (add-p (vector (sonotopic-grid-path-x) (sonotopic-grid-path-y) 0)))
+  (add-p (sonotopic-grid-path)))
 
 (every-frame (render))

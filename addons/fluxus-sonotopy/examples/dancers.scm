@@ -16,20 +16,22 @@
             [angle-dir 0]
             [speed-factor 0]
             [speed-offset 0]
+            [thickness 0]
             [r (build-ribbon 10)])
         
         (define (reset)
             (set! current-pos (crndvec))
             (set! angle-offset (* 2 pi (rndf)))
             (set! angle-dir (if (zero? (random 2)) 1 -1))
-            (set! speed-factor (+ .3 (* .3 (rndf))))
-            (set! speed-offset (* .1 (crndf)))
+            (set! speed-factor (+ .7 (* .3 (rndf))))
+            (set! speed-offset (* .2 (crndf)))
+            (set! thickness (+ .001 (* .005 (rndf))))
             
             (with-primitive r
                 (hint-unlit)
                 (pdata-index-map!
                     (lambda (i w)
-                        (* .01 (sin (* pi (/ i (pdata-size))))))
+                        (* thickness (sin (* pi (/ i (pdata-size))))))
                     "w")
                 (pdata-map!
                     (lambda (p)
