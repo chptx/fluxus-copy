@@ -1,13 +1,17 @@
 (require fluxus-017/fluxus-sonotopy)
 (init-sonotopy)
 
-(define (bars c)
-    (cond ((not (negative? c))
-        (translate (vector 1.1 0 0))
-        (with-state
-            (colour (vector 1 0 (spectrum-bin c)))
-            (scale (vector 1 (+ 0.1 (* 5 (spectrum-bin c))) 1))
-            (draw-cube))
-        (bars (- c 1)))))
+(clear)
 
-(every-frame (bars (- (get-num-spectrum-bins) 1)))
+(scale .45)
+(translate #(-19 0 0))
+
+(define (bars)
+    (for ([i (in-range (get-num-spectrum-bins))])
+        (translate #(1.1 0 0))
+        (with-state
+            (scale (vector 1 (+ .1 (* 10 (spectrum-bin i))) 1))
+            (translate #(0 .5 0))
+            (draw-cube))))
+
+(every-frame (bars))

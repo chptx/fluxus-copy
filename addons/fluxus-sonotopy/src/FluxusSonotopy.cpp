@@ -270,9 +270,10 @@ Scheme_Object *get_num_waveform_frames(int argc, Scheme_Object **argv) {
 Scheme_Object *get_waveform(int argc, Scheme_Object **argv) {
   Scheme_Object *result = NULL;
   Scheme_Object *tmp = NULL;
-  MZ_GC_DECL_REG(2);
-  MZ_GC_VAR_IN_REG(0, result);
-  MZ_GC_VAR_IN_REG(1, tmp);
+  MZ_GC_DECL_REG(3);
+  MZ_GC_VAR_IN_REG(0, argv);
+  MZ_GC_VAR_IN_REG(1, result);
+  MZ_GC_VAR_IN_REG(2, tmp);
   MZ_GC_REG();
 
   if(sonotopyInterface != NULL) {
@@ -294,37 +295,38 @@ Scheme_Object *get_waveform(int argc, Scheme_Object **argv) {
 
 
 // StartFunctionDoc-en
-// get-sonotopic-grid-width
-// Returns: integer
+// get-grid-size
+// Returns: grid-size-vector
 // Description:
+// Returns the dimensions of the sonotopic grid.
 // Example:
 // EndFunctionDoc
 
-Scheme_Object *get_sonotopic_grid_width(int argc, Scheme_Object **argv) {
-  unsigned width = 0;
-  if(sonotopyInterface != NULL)
+Scheme_Object *get_grid_size(int argc, Scheme_Object **argv) {
+  Scheme_Object *result = NULL;
+  MZ_GC_DECL_REG(2);
+  MZ_GC_VAR_IN_REG(0, argv);
+  MZ_GC_VAR_IN_REG(1, result);
+  MZ_GC_REG();
+  result = scheme_make_vector(3, scheme_void);
+
+  float width = 0, height = 0;
+  if(sonotopyInterface != NULL) {
     width = sonotopyInterface->getGridMapWidth();
-  return scheme_make_integer_value(width);
-}
-
-
-// StartFunctionDoc-en
-// get-sonotopic-grid-height
-// Returns: integer
-// Description:
-// Example:
-// EndFunctionDoc
-
-Scheme_Object *get_sonotopic_grid_height(int argc, Scheme_Object **argv) {
-  unsigned height = 0;
-  if(sonotopyInterface != NULL)
     height = sonotopyInterface->getGridMapHeight();
-  return scheme_make_integer_value(height);
+  }
+
+  SCHEME_VEC_ELS(result)[0] = scheme_make_integer_value(width);
+  SCHEME_VEC_ELS(result)[1] = scheme_make_integer_value(height);
+  SCHEME_VEC_ELS(result)[2] = scheme_make_integer_value(0);
+
+  MZ_GC_UNREG();
+  return result;
 }
 
 
 // StartFunctionDoc-en
-// sonotopic-grid-pattern-node x-int y-int
+// get-grid-activation-in-node x-int y-int
 // Returns: float
 // Description:
 // Returns the sonotopic grid pattern activation value at node
@@ -348,7 +350,7 @@ Scheme_Object *get_grid_activation_in_node(int argc, Scheme_Object **argv) {
 
 
 // StartFunctionDoc-en
-// sonotopic-grid-pattern
+// get-grid-activation-pattern
 // Returns: vector of vector of float
 // Description:
 // The activation pattern can be conceived of as an image or terrain
@@ -397,7 +399,7 @@ Scheme_Object *get_grid_activation_pattern(int argc, Scheme_Object **argv) {
 
 
 // StartFunctionDoc-en
-// sonotopic-grid-path
+// get-grid-path
 // Returns: vector
 // Description:
 // Returns a vector representing a position in a 2-d surface. The
@@ -468,10 +470,8 @@ Scheme_Object *scheme_reload(Scheme_Env *env)
 		    scheme_make_prim_w_arity(get_num_waveform_frames, "get-num-waveform-frames", 0, 0), menv);
   scheme_add_global("waveform",
 		    scheme_make_prim_w_arity(get_waveform, "waveform", 0, 0), menv);
-  scheme_add_global("get-sonotopic-grid-width",
-		    scheme_make_prim_w_arity(get_sonotopic_grid_width, "get-sonotopic-grid-width", 0, 0), menv);
-  scheme_add_global("get-sonotopic-grid-height",
-		    scheme_make_prim_w_arity(get_sonotopic_grid_height, "get-sonotopic-grid-height", 0, 0), menv);
+  scheme_add_global("sonotopic-grid-size",
+		    scheme_make_prim_w_arity(get_grid_size, "sonotopic-grid-size", 0, 0), menv);
   scheme_add_global("sonotopic-grid-pattern",
 		    scheme_make_prim_w_arity(get_grid_activation_pattern, "sonotopic-grid-pattern", 0, 0), menv);
   scheme_add_global("sonotopic-grid-pattern-node",

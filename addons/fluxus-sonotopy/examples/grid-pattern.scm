@@ -8,8 +8,7 @@
 (set-camera-transform (mtranslate #(0 0 -10)))
 (scale #(21 16 1))
 
-(define sw (get-sonotopic-grid-width))
-(define sh (get-sonotopic-grid-height))
+(define-values (sw sh _) (vector->values (sonotopic-grid-size)))
 (define p (build-pixels sw sh))
 (define contrast 15.0)
 
