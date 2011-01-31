@@ -128,7 +128,7 @@ Scheme_Object *init_sonotopy(int argc, Scheme_Object **argv) {
 // the auditory input. The value is related to a continously updated
 // circular sonotopic map of recently encountered audio. The output is
 // expected to roughly reflect musical and harmonic dynamics. It can
-// be used e.g. to control movement. Range: -2*pi to 2*pi.
+// be used e.g. to control movement. Range: 0 to 2*pi.
 // Example:
 // (rotate (vector 90 (* 360 (/ (vane) (* pi 2))) 0))
 // (draw-cube)
@@ -423,7 +423,7 @@ Scheme_Object *get_grid_path(int argc, Scheme_Object **argv) {
 
   float x = 0, y = 0;
   if(sonotopyInterface != NULL)
-    sonotopyInterface->getGridWinnerPosition(x, y);
+    sonotopyInterface->getGridCursor(x, y);
 
   tmpnode = scheme_make_float(x);
   SCHEME_VEC_ELS(result)[0] = tmpnode;

@@ -25,8 +25,9 @@ SonotopyInterface::SonotopyInterface(int sampleRate, int bufferSize) {
   spectrumAnalyzer = new SpectrumAnalyzer();
   spectrumBinDivider = new SpectrumBinDivider(sampleRate,
                                               spectrumAnalyzer->getSpectrumResolution());
-  vane = new Vane(audioParameters);
   beatTracker = new BeatTracker(spectrumBinDivider->getNumBins(), bufferSize, sampleRate);
+
+  circleMapCircuit = new CircleMapCircuit(audioParameters, circleMapCircuitParameters);
 
   gridMapCircuit = new GridMapCircuit(audioParameters, gridMapCircuitParameters);
   gridMapWidth = gridMapCircuitParameters.gridWidth;
@@ -38,10 +39,10 @@ SonotopyInterface::SonotopyInterface(int sampleRate, int bufferSize) {
 }
 
 SonotopyInterface::~SonotopyInterface() {
-  delete vane;
   delete beatTracker;
   delete spectrumBinDivider;
   delete spectrumAnalyzer;
+  delete circleMapCircuit;
   delete gridMapCircuit;
   if(waveformCircularBuffer != NULL)
     delete waveformCircularBuffer;
@@ -53,7 +54,7 @@ void SonotopyInterface::feedAudio(const float *buffer, unsigned long numFrames) 
   spectrumAnalyzer->feedAudioFrames(buffer, numFrames);
   spectrumBinDivider->feedSpectrum(spectrumAnalyzer->getSpectrum(), numFrames);
   beatTracker->feedFeatureVector(spectrumBinDivider->getBinValues());
-  vane->feedAudio(buffer, numFrames);
+  circleMapCircuit->feedAudio(buffer, numFrames);
   gridMapCircuit->feedAudio(buffer, numFrames);
   if(waveformCircularBuffer != NULL) {
     waveformCircularBuffer->write(numFrames, buffer);
@@ -62,7 +63,7 @@ void SonotopyInterface::feedAudio(const float *buffer, unsigned long numFrames) 
 }
 
 float SonotopyInterface::getVaneAngle() {
-  return vane->getAngle();
+  return circleMapCircuit->getAngle();
 }
 
 float SonotopyInterface::getBeatIntensity() {
@@ -129,6 +130,6 @@ float SonotopyInterface::getGridMapActivation(unsigned int x, unsigned int y) {
   return gridMapCircuit->getActivation(x, y);
 }
 
-void SonotopyInterface::getGridWinnerPosition(float &x, float &y) {
-  gridMapCircuit->getWinnerPosition(x, y);
+void SonotopyInterface::getGridCursor(float &x, float &y) {
+  gridMapCircuit->getCursor(x, y);
 }

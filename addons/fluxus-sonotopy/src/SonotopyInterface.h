@@ -32,16 +32,17 @@ class SonotopyInterface {
   const sonotopy::SpectrumMap::ActivationPattern* getGridMapActivationPattern();
   unsigned int getGridMapWidth();
   unsigned int getGridMapHeight();
-  void getGridWinnerPosition(float &x, float &y);
+  void getGridCursor(float &x, float &y);
 
  private:
-  sonotopy::Vane *vane;
   sonotopy::BeatTracker *beatTracker;
   sonotopy::SpectrumAnalyzer *spectrumAnalyzer;
   sonotopy::SpectrumBinDivider *spectrumBinDivider;
   sonotopy::CircularBuffer<float> *waveformCircularBuffer;
   float *waveformBuffer;
   int numWaveformFrames;
+  sonotopy::CircleMapCircuit *circleMapCircuit;
+  sonotopy::CircleMapCircuitParameters circleMapCircuitParameters;
   sonotopy::GridMapCircuit *gridMapCircuit;
   sonotopy::GridMapCircuitParameters gridMapCircuitParameters;
   unsigned int gridMapWidth, gridMapHeight;
