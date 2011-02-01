@@ -1,6 +1,7 @@
 (require racket/math)
 (require fluxus-017/fluxus-sonotopy)
 
+(clear)
 (init-sonotopy)
 
 (define (render)
