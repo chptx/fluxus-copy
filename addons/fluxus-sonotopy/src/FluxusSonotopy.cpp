@@ -379,9 +379,9 @@ Scheme_Object *get_grid_activation_pattern(int argc, Scheme_Object **argv) {
   result = scheme_make_vector(gridMapHeight, scheme_void);
 
   if(sonotopyInterface != NULL) {
-    const SpectrumMap::ActivationPattern *activationPattern =
+    const SOM::ActivationPattern *activationPattern =
       sonotopyInterface->getGridMapActivationPattern();
-    SpectrumMap::ActivationPattern::const_iterator activationPatternIterator =
+    SOM::ActivationPattern::const_iterator activationPatternIterator =
       activationPattern->begin();
     for(unsigned int y = 0; y < gridMapHeight; y++) {
       tmprow = scheme_make_vector(gridMapWidth, scheme_void);

@@ -27,11 +27,11 @@ SonotopyInterface::SonotopyInterface(int sampleRate, int bufferSize) {
                                               spectrumAnalyzer->getSpectrumResolution());
   beatTracker = new BeatTracker(spectrumBinDivider->getNumBins(), bufferSize, sampleRate);
 
-  circleMapCircuit = new CircleMapCircuit(audioParameters, circleMapCircuitParameters);
+  circleMap = new CircleMap(audioParameters, circleMapParameters);
 
-  gridMapCircuit = new GridMapCircuit(audioParameters, gridMapCircuitParameters);
-  gridMapWidth = gridMapCircuitParameters.gridWidth;
-  gridMapHeight = gridMapCircuitParameters.gridHeight;
+  gridMap = new GridMap(audioParameters, gridMapParameters);
+  gridMapWidth = gridMapParameters.gridWidth;
+  gridMapHeight = gridMapParameters.gridHeight;
 
   waveformCircularBuffer = NULL;
   waveformBuffer = NULL;
@@ -42,8 +42,8 @@ SonotopyInterface::~SonotopyInterface() {
   delete beatTracker;
   delete spectrumBinDivider;
   delete spectrumAnalyzer;
-  delete circleMapCircuit;
-  delete gridMapCircuit;
+  delete circleMap;
+  delete gridMap;
   if(waveformCircularBuffer != NULL)
     delete waveformCircularBuffer;
   if(waveformBuffer != NULL)
@@ -54,8 +54,8 @@ void SonotopyInterface::feedAudio(const float *buffer, unsigned long numFrames) 
   spectrumAnalyzer->feedAudioFrames(buffer, numFrames);
   spectrumBinDivider->feedSpectrum(spectrumAnalyzer->getSpectrum(), numFrames);
   beatTracker->feedFeatureVector(spectrumBinDivider->getBinValues());
-  circleMapCircuit->feedAudio(buffer, numFrames);
-  gridMapCircuit->feedAudio(buffer, numFrames);
+  circleMap->feedAudio(buffer, numFrames);
+  gridMap->feedAudio(buffer, numFrames);
   if(waveformCircularBuffer != NULL) {
     waveformCircularBuffer->write(numFrames, buffer);
     waveformCircularBuffer->moveReadHead(numFrames);
@@ -63,7 +63,7 @@ void SonotopyInterface::feedAudio(const float *buffer, unsigned long numFrames) 
 }
 
 float SonotopyInterface::getVaneAngle() {
-  return circleMapCircuit->getAngle();
+  return circleMap->getAngle();
 }
 
 float SonotopyInterface::getBeatIntensity() {
@@ -120,16 +120,16 @@ unsigned int SonotopyInterface::getGridMapHeight() {
   return gridMapHeight;
 }
 
-const SpectrumMap::ActivationPattern* SonotopyInterface::getGridMapActivationPattern() {
-  return gridMapCircuit->getActivationPattern();
+const SOM::ActivationPattern* SonotopyInterface::getGridMapActivationPattern() {
+  return gridMap->getActivationPattern();
 }
 
 float SonotopyInterface::getGridMapActivation(unsigned int x, unsigned int y) {
   if(x >= gridMapWidth) return 0.0f;
   if(y >= gridMapHeight) return 0.0f;
-  return gridMapCircuit->getActivation(x, y);
+  return gridMap->getActivation(x, y);
 }
 
 void SonotopyInterface::getGridCursor(float &x, float &y) {
-  gridMapCircuit->getCursor(x, y);
+  gridMap->getCursor(x, y);
 }
