@@ -15,6 +15,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 #include <sonotopy/sonotopy.hpp>
+#include <pthread.h>
 
 class SonotopyInterface {
  public:
@@ -32,6 +33,7 @@ class SonotopyInterface {
   const sonotopy::SOM::ActivationPattern* getGridMapActivationPattern();
   unsigned int getGridMapWidth();
   unsigned int getGridMapHeight();
+  void setGridMapSize(unsigned int width, unsigned int height);
   void getGridCursor(float &x, float &y);
 
  private:
@@ -46,7 +48,7 @@ class SonotopyInterface {
   sonotopy::GridMap *gridMap;
   sonotopy::GridMapParameters gridMapParameters;
   unsigned int gridMapWidth, gridMapHeight;
-  sonotopy::SOM::ActivationPattern *gridMapActivationPattern;
   sonotopy::AudioParameters audioParameters;
   sonotopy::Normalizer normalizer;
+  pthread_mutex_t mutex;
 };

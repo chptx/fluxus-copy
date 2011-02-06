@@ -295,20 +295,33 @@ Scheme_Object *get_waveform(int argc, Scheme_Object **argv) {
 
 
 // StartFunctionDoc-en
-// get-grid-size
+// grid-size grid-size-vector
 // Returns: grid-size-vector
 // Description:
-// Returns the dimensions of the sonotopic grid.
+// If the size vector is provided, sets the size of the sonotopic grid
+// and returns the new dimensions. If called without argument, returns
+// the current dimensions of the sonotopic grid.
 // Example:
+// (grid-size)
+// (grid-size (vector (10 10 0))
 // EndFunctionDoc
 
-Scheme_Object *get_grid_size(int argc, Scheme_Object **argv) {
+Scheme_Object *grid_size(int argc, Scheme_Object **argv) {
   Scheme_Object *result = NULL;
   MZ_GC_DECL_REG(2);
   MZ_GC_VAR_IN_REG(0, argv);
   MZ_GC_VAR_IN_REG(1, result);
   MZ_GC_REG();
   result = scheme_make_vector(3, scheme_void);
+
+  if(argc == 1) {
+    ArgCheck("grid-size", "v", argc, argv);
+    vector<float> sizeVector = SchemeHelper::FloatVectorFromScheme(argv[0]);
+    if(sizeVector.size() == 2 || sizeVector.size() == 3) {
+      if(sonotopyInterface != NULL)
+	sonotopyInterface->setGridMapSize(sizeVector[0], sizeVector[1]);
+    }
+  }
 
   float width = 0, height = 0;
   if(sonotopyInterface != NULL) {
@@ -373,12 +386,12 @@ Scheme_Object *get_grid_activation_pattern(int argc, Scheme_Object **argv) {
   MZ_GC_VAR_IN_REG(2, tmpnode);
   MZ_GC_REG();
 
-  unsigned int gridMapWidth = sonotopyInterface->getGridMapWidth();
-  unsigned int gridMapHeight = sonotopyInterface->getGridMapHeight();
-
-  result = scheme_make_vector(gridMapHeight, scheme_void);
-
   if(sonotopyInterface != NULL) {
+    unsigned int gridMapWidth = sonotopyInterface->getGridMapWidth();
+    unsigned int gridMapHeight = sonotopyInterface->getGridMapHeight();
+
+    result = scheme_make_vector(gridMapHeight, scheme_void);
+
     const SOM::ActivationPattern *activationPattern =
       sonotopyInterface->getGridMapActivationPattern();
     SOM::ActivationPattern::const_iterator activationPatternIterator =
@@ -471,7 +484,7 @@ Scheme_Object *scheme_reload(Scheme_Env *env)
   scheme_add_global("waveform",
 		    scheme_make_prim_w_arity(get_waveform, "waveform", 0, 0), menv);
   scheme_add_global("sonotopic-grid-size",
-		    scheme_make_prim_w_arity(get_grid_size, "sonotopic-grid-size", 0, 0), menv);
+		    scheme_make_prim_w_arity(grid_size, "sonotopic-grid-size", 0, 1), menv);
   scheme_add_global("sonotopic-grid-pattern",
 		    scheme_make_prim_w_arity(get_grid_activation_pattern, "sonotopic-grid-pattern", 0, 0), menv);
   scheme_add_global("sonotopic-grid-pattern-node",

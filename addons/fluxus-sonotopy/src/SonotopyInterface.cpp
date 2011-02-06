@@ -36,6 +36,7 @@ SonotopyInterface::SonotopyInterface(int sampleRate, int bufferSize) {
   waveformCircularBuffer = NULL;
   waveformBuffer = NULL;
   numWaveformFrames = 0;
+  pthread_mutex_init(&mutex, NULL);
 }
 
 SonotopyInterface::~SonotopyInterface() {
@@ -51,14 +52,17 @@ SonotopyInterface::~SonotopyInterface() {
 }
 
 void SonotopyInterface::feedAudio(const float *buffer, unsigned long numFrames) {
-  spectrumAnalyzer->feedAudioFrames(buffer, numFrames);
-  spectrumBinDivider->feedSpectrum(spectrumAnalyzer->getSpectrum(), numFrames);
-  beatTracker->feedFeatureVector(spectrumBinDivider->getBinValues());
-  circleMap->feedAudio(buffer, numFrames);
-  gridMap->feedAudio(buffer, numFrames);
-  if(waveformCircularBuffer != NULL) {
-    waveformCircularBuffer->write(numFrames, buffer);
-    waveformCircularBuffer->moveReadHead(numFrames);
+  if(pthread_mutex_trylock(&mutex) == 0) {
+    spectrumAnalyzer->feedAudioFrames(buffer, numFrames);
+    spectrumBinDivider->feedSpectrum(spectrumAnalyzer->getSpectrum(), numFrames);
+    beatTracker->feedFeatureVector(spectrumBinDivider->getBinValues());
+    circleMap->feedAudio(buffer, numFrames);
+    gridMap->feedAudio(buffer, numFrames);
+    if(waveformCircularBuffer != NULL) {
+      waveformCircularBuffer->write(numFrames, buffer);
+      waveformCircularBuffer->moveReadHead(numFrames);
+    }
+    pthread_mutex_unlock(&mutex);
   }
 }
 
@@ -118,6 +122,17 @@ unsigned int SonotopyInterface::getGridMapWidth() {
 
 unsigned int SonotopyInterface::getGridMapHeight() {
   return gridMapHeight;
+}
+
+void SonotopyInterface::setGridMapSize(unsigned int newWidth, unsigned int newHeight) {
+  if(newWidth != gridMapWidth || newHeight != gridMapHeight) {
+    pthread_mutex_lock(&mutex);
+    gridMapWidth = gridMapParameters.gridWidth = newWidth;
+    gridMapHeight = gridMapParameters.gridHeight = newHeight;
+    delete gridMap;
+    gridMap = new GridMap(audioParameters, gridMapParameters);
+    pthread_mutex_unlock(&mutex);
+  }
 }
 
 const SOM::ActivationPattern* SonotopyInterface::getGridMapActivationPattern() {
