@@ -425,6 +425,8 @@ if env['PLATFORM'] == 'darwin' and GetOption('app'):
         if addons:
             resources += [['addons/video/fluxus-video_ss.dylib',
                            BinaryModulesLocation + '/fluxus-video_ss.dylib'],
+                         ['addons/fluxus-sonotopy/fluxus-sonotopy_ss.dylib',
+                           BinaryModulesLocation + '/fluxus-sonotopy_ss.dylib'],
                          ['addons/artkp/fluxus-artkp_ss.dylib',
                            BinaryModulesLocation + '/fluxus-artkp_ss.dylib']]
 
