@@ -10,14 +10,14 @@
 (init-sonotopy)
 
 (hint-ignore-depth)
-(colour #(1 .5))
+(colour #(1 .7))
 
-(define r (build-ribbon 128))
+(define r (build-ribbon 35))
 (with-primitive r
     (hint-unlit)
     (pdata-index-map!
         (lambda (i w)
-            (* .03 (sin (* pi (/ i (pdata-size))))))
+            (* .01 (sin (* pi (/ i (pdata-size))))))
         "w"))
 
 (define (add-p np)
@@ -35,7 +35,7 @@
     (add-p (vsub (sonotopic-grid-path) #(.5 .5 0)))
     (with-primitive r
         (identity)
-        (rotate (vector 0 (vane) 0))
+        (rotate (vector (* 10 (delta)) (* 300 (* (delta) (beat))) 0))
         (apply-transform)))
 
 (every-frame (render))
