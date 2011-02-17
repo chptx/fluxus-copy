@@ -22,7 +22,7 @@ elif venv['PLATFORM'] == 'posix':
 
 # libs to check for
 LibList = [['GLEW', 'GL/glew.h']]
-Libs = ['GLEW']
+Libs = []
 
 Frameworks = []
 
