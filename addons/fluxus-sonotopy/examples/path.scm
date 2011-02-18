@@ -4,15 +4,12 @@
 
 (clear)
 
-(set-camera-transform (mtranslate #(0 0 -10)))
+(set-camera-transform (mtranslate #(-0.5 -0.5 -10)))
 (ortho)
 
 (init-sonotopy)
 
-(hint-ignore-depth)
-(colour #(1 .7))
-
-(define r (build-ribbon 35))
+(define r (build-ribbon 10))
 (with-primitive r
     (hint-unlit)
     (pdata-index-map!
@@ -22,8 +19,8 @@
 
 (define (add-p np)
     (with-primitive r
-        (when (> (vdist (pdata-ref "p" (- (pdata-size) 1))
-                        np) .03)
+        (when (not (zero? (vdist (pdata-ref "p" (- (pdata-size) 1))
+                        np)))
             (pdata-index-map!
                 (lambda (i p)
                     (if (< i (- (pdata-size) 2))
@@ -32,11 +29,6 @@
                 "p"))))
 
 (define (render)
-    (add-p (vsub (sonotopic-grid-path) #(.5 .5 0)))
-    (with-primitive r
-        (identity)
-        (rotate (vector (* 10 (delta)) (* 300 (* (delta) (beat))) 0))
-        (apply-transform)))
+    (add-p (path-cursor)))
 
 (every-frame (render))
-

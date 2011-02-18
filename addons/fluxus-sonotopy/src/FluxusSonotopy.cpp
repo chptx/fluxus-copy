@@ -134,7 +134,7 @@ Scheme_Object *init_sonotopy(int argc, Scheme_Object **argv) {
 // (draw-cube)
 // EndFunctionDoc
 
-Scheme_Object *get_vane_angle(int argc, Scheme_Object **argv) {
+Scheme_Object *vane(int argc, Scheme_Object **argv) {
   float angle = 0.0f;
   if(sonotopyInterface != NULL)
     angle = sonotopyInterface->getVaneAngle();
@@ -155,7 +155,7 @@ Scheme_Object *get_vane_angle(int argc, Scheme_Object **argv) {
 // (draw-cube)
 // EndFunctionDoc
 
-Scheme_Object *get_beat_intensity(int argc, Scheme_Object **argv) {
+Scheme_Object *beat(int argc, Scheme_Object **argv) {
   float beat_intensity = 0.0f;
   if(sonotopyInterface != NULL)
     beat_intensity = sonotopyInterface->getBeatIntensity();
@@ -165,15 +165,15 @@ Scheme_Object *get_beat_intensity(int argc, Scheme_Object **argv) {
 
 
 // StartFunctionDoc-en
-// get-num-spectrum-bins
+// num-spectrum-bins
 // Returns: integer
 // Description:
 // Returns the number of spectrum bins, whose contents can be retrieved by (spectrum-bin).
 // Example:
-// (get-num-spectrum-bins)
+// (num-spectrum-bins)
 // EndFunctionDoc
 
-Scheme_Object *get_num_spectrum_bins(int argc, Scheme_Object **argv) {
+Scheme_Object *num_spectrum_bins(int argc, Scheme_Object **argv) {
   int num_bins = 0;
   if(sonotopyInterface != NULL)
     num_bins = sonotopyInterface->getNumSpectrumBins();
@@ -186,13 +186,13 @@ Scheme_Object *get_num_spectrum_bins(int argc, Scheme_Object **argv) {
 // Returns: float
 // Description:
 // Returns the current total power of frequencies in bin number n,
-// where 0 <= n < (get-num-spectrum-bins). Low n values represent low
+// where 0 <= n < (num-spectrum-bins). Low n values represent low
 // frequency bands.
 // Example:
 // (spectrum-bin 1)
 // EndFunctionDoc
 
-Scheme_Object *get_spectrum_bin_value(int argc, Scheme_Object **argv) {
+Scheme_Object *spectrum_bin(int argc, Scheme_Object **argv) {
   DECL_ARGV();
   ArgCheck("spectrum-bin", "f", argc, argv);
   float value = 0.0f;
@@ -204,19 +204,19 @@ Scheme_Object *get_spectrum_bin_value(int argc, Scheme_Object **argv) {
 
 
 // StartFunctionDoc-en
-// set-waveform-window-size secs-float
+// waveform-window-size secs-float
 // Returns: void
 // Description:
 // Sets the size of the waveform window, measured in seconds. See
 // (waveform). Higher values yield a larger window and thus a slower
 // movement of the waveform.
 // Example:
-// (set-waveform-window-size 0.1)
+// (waveform-window-size 0.1)
 // EndFunctionDoc
 
-Scheme_Object *set_waveform_window_size(int argc, Scheme_Object **argv) {
+Scheme_Object *waveform_window_size(int argc, Scheme_Object **argv) {
   DECL_ARGV();
-  ArgCheck("set-waveform-window-size", "f", argc, argv);
+  ArgCheck("waveform-window-size", "f", argc, argv);
   if(sonotopyInterface != NULL)
     sonotopyInterface->setWaveformWindowSize(FloatFromScheme(argv[0]));
   MZ_GC_UNREG();
@@ -225,16 +225,16 @@ Scheme_Object *set_waveform_window_size(int argc, Scheme_Object **argv) {
 
 
 // StartFunctionDoc-en
-// get-num-waveform-frames
+// num-waveform-frames
 // Returns: integer
 // Description:
 // Returns the size of the waveform window, measured in audio
 // frames. This equals the size of the vector return by (waveform).
 // Example:
-// (get-num-waveform-frames)
+// (num-waveform-frames)
 // EndFunctionDoc
 
-Scheme_Object *get_num_waveform_frames(int argc, Scheme_Object **argv) {
+Scheme_Object *num_waveform_frames(int argc, Scheme_Object **argv) {
   int num_frames = 0;
   if(sonotopyInterface != NULL)
     num_frames = sonotopyInterface->getNumWaveformFrames();
@@ -248,12 +248,12 @@ Scheme_Object *get_num_waveform_frames(int argc, Scheme_Object **argv) {
 // Description:
 // Returns the waveform (sample values) of the most recent audio
 // input, as a vector of float values. The amount of time represented
-// by this window is set with (set-waveform-window-size).
+// by this window is set with (waveform-window-size).
 // Example:
-// (set-waveform-window-size 0.1)
+// (waveform-window-size 0.1)
 //
 // (clear)
-// (define p (build-ribbon (get-num-waveform-frames)))
+// (define p (build-ribbon (num-waveform-frames)))
 // (with-primitive p
 //    (hint-unlit)
 //    (pdata-map! (lambda (w) .01) "w"))
@@ -267,7 +267,7 @@ Scheme_Object *get_num_waveform_frames(int argc, Scheme_Object **argv) {
 //                "p"))))
 // EndFunctionDoc
 
-Scheme_Object *get_waveform(int argc, Scheme_Object **argv) {
+Scheme_Object *waveform(int argc, Scheme_Object **argv) {
   Scheme_Object *result = NULL;
   Scheme_Object *tmp = NULL;
   MZ_GC_DECL_REG(3);
@@ -339,18 +339,18 @@ Scheme_Object *grid_size(int argc, Scheme_Object **argv) {
 
 
 // StartFunctionDoc-en
-// get-grid-activation-in-node x-int y-int
+// grid-pattern-node x-int y-int
 // Returns: float
 // Description:
 // Returns the sonotopic grid pattern activation value at node
-// (x,y). For more information, see (sonotopic-grid-pattern).
+// (x,y). For more information, see (grid-pattern).
 // Example:
-// (sonotopic-grid-pattern-node x y)
+// (grid-pattern-node x y)
 // EndFunctionDoc
 
-Scheme_Object *get_grid_activation_in_node(int argc, Scheme_Object **argv) {
+Scheme_Object *grid_pattern_node(int argc, Scheme_Object **argv) {
   DECL_ARGV();
-  ArgCheck("sonotopic-grid-node", "ii", argc, argv);
+  ArgCheck("grid-pattern-node", "ii", argc, argv);
   float value = 0.0f;
   if(sonotopyInterface != NULL) {
     unsigned int x = IntFromScheme(argv[0]);
@@ -363,7 +363,7 @@ Scheme_Object *get_grid_activation_in_node(int argc, Scheme_Object **argv) {
 
 
 // StartFunctionDoc-en
-// get-grid-activation-pattern
+// grid-pattern
 // Returns: vector of vector of float
 // Description:
 // The activation pattern can be conceived of as an image or terrain
@@ -376,7 +376,7 @@ Scheme_Object *get_grid_activation_in_node(int argc, Scheme_Object **argv) {
 // see examples/grid-pattern.scm
 // EndFunctionDoc
 
-Scheme_Object *get_grid_activation_pattern(int argc, Scheme_Object **argv) {
+Scheme_Object *grid_pattern(int argc, Scheme_Object **argv) {
   Scheme_Object *result = NULL;
   Scheme_Object *tmprow = NULL;
   Scheme_Object *tmpnode = NULL;
@@ -412,20 +412,20 @@ Scheme_Object *get_grid_activation_pattern(int argc, Scheme_Object **argv) {
 
 
 // StartFunctionDoc-en
-// get-grid-path
+// path-cursor
 // Returns: vector
 // Description:
 // Returns a vector representing a position in a 2-d surface. The
 // sequence of return values can be expected to constitute a path
 // along the surface. The path relates to the activation pattern of a
-// sonotopic grid; see also (sonotopic-grid-pattern). Coordinate
-// range: (0,0)-(1,1). The returned vector has the form #(x-coordinate
+// sonotopic grid; see also (grid-pattern). Coordinate range:
+// (0,0)-(1,1). The returned vector has the form #(x-coordinate
 // y-coordinate 0).
 // Example:
-// see examples/grid-path.scm
+// see examples/path.scm
 // EndFunctionDoc
 
-Scheme_Object *get_grid_path(int argc, Scheme_Object **argv) {
+Scheme_Object *path_cursor(int argc, Scheme_Object **argv) {
   Scheme_Object *result = NULL;
   Scheme_Object *tmpnode = NULL;
   MZ_GC_DECL_REG(2);
@@ -470,27 +470,27 @@ Scheme_Object *scheme_reload(Scheme_Env *env)
   scheme_add_global("init-sonotopy",
 		    scheme_make_prim_w_arity(init_sonotopy, "init-sonotopy", 0, 1), menv);
   scheme_add_global("vane",
-		    scheme_make_prim_w_arity(get_vane_angle, "vane", 0, 0), menv);
+		    scheme_make_prim_w_arity(vane, "vane", 0, 0), menv);
   scheme_add_global("beat",
-		    scheme_make_prim_w_arity(get_beat_intensity, "beat", 0, 0), menv);
-  scheme_add_global("get-num-spectrum-bins",
-		    scheme_make_prim_w_arity(get_num_spectrum_bins, "get-num-spectrum-bins", 0, 0), menv);
+		    scheme_make_prim_w_arity(beat, "beat", 0, 0), menv);
+  scheme_add_global("num-spectrum-bins",
+		    scheme_make_prim_w_arity(num_spectrum_bins, "num-spectrum-bins", 0, 0), menv);
   scheme_add_global("spectrum-bin",
-		    scheme_make_prim_w_arity(get_spectrum_bin_value, "spectrum-bin", 1, 1), menv);
-  scheme_add_global("set-waveform-window-size",
-		    scheme_make_prim_w_arity(set_waveform_window_size, "set-waveform-window-size", 1, 1), menv);
-  scheme_add_global("get-num-waveform-frames",
-		    scheme_make_prim_w_arity(get_num_waveform_frames, "get-num-waveform-frames", 0, 0), menv);
+		    scheme_make_prim_w_arity(spectrum_bin, "spectrum-bin", 1, 1), menv);
+  scheme_add_global("waveform-window-size",
+		    scheme_make_prim_w_arity(waveform_window_size, "waveform-window-size", 1, 1), menv);
+  scheme_add_global("num-waveform-frames",
+		    scheme_make_prim_w_arity(num_waveform_frames, "num-waveform-frames", 0, 0), menv);
   scheme_add_global("waveform",
-		    scheme_make_prim_w_arity(get_waveform, "waveform", 0, 0), menv);
-  scheme_add_global("sonotopic-grid-size",
-		    scheme_make_prim_w_arity(grid_size, "sonotopic-grid-size", 0, 1), menv);
-  scheme_add_global("sonotopic-grid-pattern",
-		    scheme_make_prim_w_arity(get_grid_activation_pattern, "sonotopic-grid-pattern", 0, 0), menv);
-  scheme_add_global("sonotopic-grid-pattern-node",
-		    scheme_make_prim_w_arity(get_grid_activation_in_node, "sonotopic-grid-pattern-node", 2, 2), menv);
-  scheme_add_global("sonotopic-grid-path",
-		    scheme_make_prim_w_arity(get_grid_path, "sonotopic-grid-path", 0, 0), menv);
+		    scheme_make_prim_w_arity(waveform, "waveform", 0, 0), menv);
+  scheme_add_global("grid-size",
+		    scheme_make_prim_w_arity(grid_size, "grid-size", 0, 1), menv);
+  scheme_add_global("grid-pattern",
+		    scheme_make_prim_w_arity(grid_pattern, "grid-pattern", 0, 0), menv);
+  scheme_add_global("grid-pattern-node",
+		    scheme_make_prim_w_arity(grid_pattern_node, "grid-pattern-node", 2, 2), menv);
+  scheme_add_global("path-cursor",
+		    scheme_make_prim_w_arity(path_cursor, "path-cursor", 0, 0), menv);
 
   scheme_finish_primitive_module(menv);
   MZ_GC_UNREG();

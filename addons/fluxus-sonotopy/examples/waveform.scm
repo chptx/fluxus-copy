@@ -1,10 +1,10 @@
 (require fluxus-017/fluxus-sonotopy)
 (init-sonotopy)
 
-(set-waveform-window-size 0.1)
+(waveform-window-size 0.1)
 
 (clear)
-(define p (build-ribbon (get-num-waveform-frames)))
+(define p (build-ribbon (num-waveform-frames)))
 (with-primitive p
    (hint-unlit)
    (pdata-map! (lambda (w) .01) "w"))

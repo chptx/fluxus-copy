@@ -7,7 +7,7 @@
 (translate #(-19 0 0))
 
 (define (bars)
-    (for ([i (in-range (get-num-spectrum-bins))])
+    (for ([i (in-range (num-spectrum-bins))])
         (translate #(1.1 0 0))
         (with-state
             (scale (vector 1 (+ .1 (* 10 (spectrum-bin i))) 1))
