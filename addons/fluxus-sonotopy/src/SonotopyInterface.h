@@ -50,5 +50,4 @@ class SonotopyInterface {
   unsigned int gridMapWidth, gridMapHeight;
   sonotopy::AudioParameters audioParameters;
   sonotopy::Normalizer normalizer;
-  pthread_mutex_t mutex;
 };

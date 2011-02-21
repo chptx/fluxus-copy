@@ -36,7 +36,6 @@ SonotopyInterface::SonotopyInterface(int sampleRate, int bufferSize) {
   waveformCircularBuffer = NULL;
   waveformBuffer = NULL;
   numWaveformFrames = 0;
-  pthread_mutex_init(&mutex, NULL);
 }
 
 SonotopyInterface::~SonotopyInterface() {
@@ -52,17 +51,14 @@ SonotopyInterface::~SonotopyInterface() {
 }
 
 void SonotopyInterface::feedAudio(const float *buffer, unsigned long numFrames) {
-  if(pthread_mutex_trylock(&mutex) == 0) {
-    spectrumAnalyzer->feedAudioFrames(buffer, numFrames);
-    spectrumBinDivider->feedSpectrum(spectrumAnalyzer->getSpectrum(), numFrames);
-    beatTracker->feedFeatureVector(spectrumBinDivider->getBinValues());
-    circleMap->feedAudio(buffer, numFrames);
-    gridMap->feedAudio(buffer, numFrames);
-    if(waveformCircularBuffer != NULL) {
-      waveformCircularBuffer->write(numFrames, buffer);
-      waveformCircularBuffer->moveReadHead(numFrames);
-    }
-    pthread_mutex_unlock(&mutex);
+  spectrumAnalyzer->feedAudioFrames(buffer, numFrames);
+  spectrumBinDivider->feedSpectrum(spectrumAnalyzer->getSpectrum(), numFrames);
+  beatTracker->feedFeatureVector(spectrumBinDivider->getBinValues());
+  circleMap->feedAudio(buffer, numFrames);
+  gridMap->feedAudio(buffer, numFrames);
+  if(waveformCircularBuffer != NULL) {
+    waveformCircularBuffer->write(numFrames, buffer);
+    waveformCircularBuffer->moveReadHead(numFrames);
   }
 }
 
@@ -126,12 +122,10 @@ unsigned int SonotopyInterface::getGridMapHeight() {
 
 void SonotopyInterface::setGridMapSize(unsigned int newWidth, unsigned int newHeight) {
   if(newWidth != gridMapWidth || newHeight != gridMapHeight) {
-    pthread_mutex_lock(&mutex);
     gridMapWidth = gridMapParameters.gridWidth = newWidth;
     gridMapHeight = gridMapParameters.gridHeight = newHeight;
     delete gridMap;
     gridMap = new GridMap(audioParameters, gridMapParameters);
-    pthread_mutex_unlock(&mutex);
   }
 }
 

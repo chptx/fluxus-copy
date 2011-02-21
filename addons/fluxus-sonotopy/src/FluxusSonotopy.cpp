@@ -28,11 +28,14 @@ jack_client_t *jackClient = NULL;
 bool jackActivated = false;
 jack_port_t *jackInputPort;
 SonotopyInterface *sonotopyInterface = NULL;
+pthread_mutex_t mutex;
 
 int jackProcess(jack_nframes_t num_frames, void *arg) {
   jack_default_audio_sample_t *buffer =
     (jack_default_audio_sample_t *) jack_port_get_buffer(jackInputPort, num_frames);
+  pthread_mutex_lock(&mutex);
   sonotopyInterface->feedAudio((float *)buffer, num_frames);
+  pthread_mutex_unlock(&mutex);
   return 0;
 }
 
@@ -318,8 +321,11 @@ Scheme_Object *grid_size(int argc, Scheme_Object **argv) {
     ArgCheck("grid-size", "v", argc, argv);
     vector<float> sizeVector = SchemeHelper::FloatVectorFromScheme(argv[0]);
     if(sizeVector.size() == 2 || sizeVector.size() == 3) {
-      if(sonotopyInterface != NULL)
+      if(sonotopyInterface != NULL) {
+	pthread_mutex_lock(&mutex);
 	sonotopyInterface->setGridMapSize(sizeVector[0], sizeVector[1]);
+	pthread_mutex_unlock(&mutex);
+      }
     }
   }
 
@@ -392,6 +398,7 @@ Scheme_Object *grid_pattern(int argc, Scheme_Object **argv) {
 
     result = scheme_make_vector(gridMapHeight, scheme_void);
 
+    pthread_mutex_lock(&mutex);
     const SOM::ActivationPattern *activationPattern =
       sonotopyInterface->getGridMapActivationPattern();
     SOM::ActivationPattern::const_iterator activationPatternIterator =
@@ -404,6 +411,7 @@ Scheme_Object *grid_pattern(int argc, Scheme_Object **argv) {
       }
       SCHEME_VEC_ELS(result)[y] = tmprow;
     }
+    pthread_mutex_unlock(&mutex);
   }
 
   MZ_GC_UNREG();
@@ -465,6 +473,7 @@ Scheme_Object *scheme_reload(Scheme_Env *env)
   MZ_GC_VAR_IN_REG(1, menv);
   MZ_GC_REG();
 
+  pthread_mutex_init(&mutex, NULL);
   menv=scheme_primitive_module(scheme_intern_symbol("fluxus-sonotopy"), env);
 
   scheme_add_global("init-sonotopy",
