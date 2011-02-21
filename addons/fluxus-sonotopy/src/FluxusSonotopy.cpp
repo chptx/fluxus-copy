@@ -19,6 +19,7 @@
 #include <jack/jack.h>
 #include "SonotopyInterface.h"
 #include "SchemeHelper.h"
+#include <pthread.h>
 
 using namespace std;
 using namespace sonotopy;
