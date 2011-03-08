@@ -29,6 +29,8 @@ SonotopyInterface::SonotopyInterface(int sampleRate, int bufferSize) {
 
   circleMap = new CircleMap(audioParameters, circleMapParameters);
 
+  gridMapParameters.adaptationStrategy = SpectrumMapParameters::TimeBased;
+
   gridMap = new GridMap(audioParameters, gridMapParameters);
   gridMapWidth = gridMapParameters.gridWidth;
   gridMapHeight = gridMapParameters.gridHeight;
