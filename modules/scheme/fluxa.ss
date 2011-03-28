@@ -20,7 +20,7 @@
 (provide
 		play play-now seq clock-map clock-split volume pan max-synths note searchpath reset eq comp
 		sine saw tri squ white pink adsr add sub mul div pow mooglp moogbp mooghp formant sample
-		crush distort klip echo ks xfade s&h t&h reload zmod sync-tempo sync-clock fluxa-init fluxa-debug set-global-offset
+		crush distort klip echo ks xfade s&h t&h ramp reload zmod sync-tempo sync-clock fluxa-init fluxa-debug set-global-offset
 		set-bpm-mult logical-time inter pick set-scale)
 
 (define time-offset 0.0)
@@ -33,7 +33,7 @@
 (define MUL 10) (define DIV 11) (define POW 12) (define MOOGLP 13) (define MOOGBP 14)
 (define MOOGHP 15) (define FORMANT 16) (define SAMPLE 17) (define CRUSH 18)
 (define DISTORT 19) (define CLIP 20) (define ECHO 21) (define KS 22) (define XFADE 23)
-(define SAMPNHOLD 24) (define TRACKNHOLD 25)
+(define SAMPNHOLD 24) (define TRACKNHOLD 25) (define RAMP 26)
 
 (define (fluxa-init)
   (osc-destination "osc.udp://127.0.0.1:4004")
@@ -601,6 +601,18 @@
 
 (define (t&h sig cv)
   (operator TRACKNHOLD (list sig cv)))
+
+;; StartFunctionDoc-en
+;; ramp start-number-or-node end-number-or-node duration-number-or-node 
+;; Returns: node-id-number
+;; Description:
+;; ramp. Linearly ramps from a start value to a end value over a given duration
+;; Example:
+;; (play-now (sine (ramp 220 440 2)))
+;; EndFunctionDoc
+
+(define (ramp a b dur )
+  (operator RAMP (list a b dur))) 
 
 
 ;; StartFunctionDoc-en

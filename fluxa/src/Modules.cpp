@@ -487,6 +487,67 @@ void Envelope::Trigger(float time, float pitch, float vol)
 
 ///////////////////////////////////////////////////////////////////////////
 
+Ramp::Ramp(int SampleRate) : 
+Module(SampleRate)
+{
+	m_SampleTime=1.0/(float)m_SampleRate;
+	Reset();
+}
+	
+void Ramp::Reset()
+{
+	m_Trigger = false;
+	m_Start=0.0f;
+	m_End=0.0f;
+	m_Delta=0.0f;
+	m_Dur=5.0f;
+	m_t=-1000.0f;
+}
+	
+void Ramp::Process(unsigned int BufSize, Sample &CV) 
+{	
+	if (m_Trigger)
+	{
+		for (unsigned int n=0; n<BufSize; n++)
+		{	
+			// if we are in the delay (before really being triggered)		
+			if (m_t<0) 
+			{		
+				CV[n]=m_Start;
+				m_t+=m_SampleTime;
+			}
+			//if we are ramping
+			else if (m_t<m_Dur)
+			{
+				CV[n]= ((m_t / m_Dur) * m_Delta) + m_Start;
+				m_t+=m_SampleTime;
+			}
+			//after the change
+			else
+			{
+				CV[n] = m_End;
+			}
+		} 
+	}
+	else
+	{
+	for (unsigned int n=0; n<BufSize; n++)
+		{
+		CV[n]=m_Start;
+		}
+	}
+}
+
+void Ramp::Trigger(float time, float pitch, float vol) 
+{
+	m_Delta = m_End - m_Start;
+	m_Trigger = true;
+	m_t=time; 
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+
 SimpleEnvelope::SimpleEnvelope(int SampleRate) : 
 Module(SampleRate)
 {

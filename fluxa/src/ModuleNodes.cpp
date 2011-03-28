@@ -89,6 +89,35 @@ void ADSRNode::Process(unsigned int bufsize)
 	m_Envelope.Process(bufsize, m_Output);
 }
 
+RampNode::RampNode(unsigned int SampleRate):
+GraphNode(3),
+m_Ramp(SampleRate)
+{
+}
+
+void RampNode::Trigger(float time)
+{
+	TriggerChildren(time);
+	
+	if (ChildExists(0)) m_Ramp.SetStartVal(GetChild(0)->GetCVValue());
+	if (ChildExists(1)) m_Ramp.SetEndVal(GetChild(1)->GetCVValue());
+	if (ChildExists(2)) m_Ramp.SetDur(GetChild(2)->GetCVValue());
+	
+	m_Ramp.Trigger(time, 0, 1);
+}
+
+void RampNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	
+	ProcessChildren(bufsize);
+	m_Ramp.Process(bufsize, m_Output);
+}
+
+
 MathNode::MathNode(Type t):
 GraphNode(2),
 m_Type(t)

@@ -75,6 +75,7 @@ void Graph::Init()
 				case XFADE : nodedesc->m_Node = new XFadeNode(); break;
 				case SAMPNHOLD : nodedesc->m_Node = new HoldNode(HoldNode::SAMP); break;
 				case TRACKNHOLD : nodedesc->m_Node = new HoldNode(HoldNode::TRACK); break;
+				case RAMP : nodedesc->m_Node = new RampNode(m_SampleRate); break;
 				default: assert(0); break;
 			}
 			

@@ -151,6 +151,31 @@ protected:
 
 };
 
+class Ramp : public Module
+{
+public:
+	Ramp(int SampleRate);
+	virtual ~Ramp() {}
+	
+	virtual void Process(unsigned int BufSize, Sample &CV);
+	virtual void Trigger(float time, float pitch, float vol);
+	virtual void Reset();
+
+	void SetStartVal(float s)	{ m_Start=s; }
+	void SetEndVal(float s)		{ m_End=s; }
+	void SetDur(float s)		{ m_Dur=s; }
+	
+protected:
+	bool   m_Trigger;
+	float  m_t;
+	float  m_Start;
+	float  m_End;
+	float  m_Delta;
+	float  m_Dur;	
+	float  m_SampleTime;
+};
+
+
 class SimpleEnvelope : public Module
 {
 public:

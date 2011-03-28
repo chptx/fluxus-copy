@@ -97,6 +97,19 @@ private:
 	Sample m_Temp;
 };
 
+class RampNode : public GraphNode
+{
+public:
+	RampNode(unsigned int SampleRate);
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+	
+private:
+	Ramp m_Ramp;
+	Sample m_Temp;
+};
+
+
 class MathNode : public GraphNode
 {
 public:
