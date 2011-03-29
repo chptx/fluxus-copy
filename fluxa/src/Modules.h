@@ -17,6 +17,7 @@
 #include "Types.h"
 #include "Sample.h"
 #include <stdlib.h>
+#include <math.h>
 
 #ifndef MODULES
 #define MODULES
@@ -132,10 +133,10 @@ public:
 	virtual void Trigger(float time, float pitch, float vol);
 	virtual void Reset();
 
-	void SetAttack(float s)  { m_Attack=s; }
-	void SetDecay(float s)   { m_Decay=s; }
+	void SetAttack(float s)  { m_Attack=fabs(s); }
+	void SetDecay(float s)   { m_Decay=fabs(s); }
 	void SetSustain(float s) { m_Sustain=s; }
-	void SetRelease(float s) { m_Release=s; }
+	void SetRelease(float s) { m_Release=fabs(s); }
 	void SetVolume(float s)  { m_Volume=s; }
 
 protected:
@@ -163,7 +164,7 @@ public:
 
 	void SetStartVal(float s)	{ m_Start=s; }
 	void SetEndVal(float s)		{ m_End=s; }
-	void SetDur(float s)		{ m_Dur=s; }
+	void SetDur(float s)		{ m_Dur=fabs(s); }
 	
 protected:
 	bool   m_Trigger;
