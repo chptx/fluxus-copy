@@ -709,3 +709,43 @@ void HoldNode::Process(unsigned int bufsize)
 		}
 	}
 }
+
+DelTrigNode::DelTrigNode():
+GraphNode(2)
+{
+}
+
+void DelTrigNode::Trigger(float time)
+{
+	TriggerChildren(time - fabs (GetChild(1)->GetCVValue()));
+}
+
+void DelTrigNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	
+	ProcessChildren(bufsize);
+	
+	if ( ChildExists(0) && ChildExists(1))
+	{
+		if ( GetChild(0)->IsTerminal() )
+		{
+			float temp = GetChild(0)->GetValue();
+			for (unsigned int n=0; n<bufsize; n++)
+			{
+				m_Output[n]=temp;
+			}
+		}
+		else
+		{
+		for (unsigned int n=0; n<bufsize; n++)
+			{
+				m_Output[n]=GetChild(0)->GetOutput()[n];
+			}
+		}
+	}
+}
+

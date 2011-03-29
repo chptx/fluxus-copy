@@ -76,6 +76,7 @@ void Graph::Init()
 				case SAMPNHOLD : nodedesc->m_Node = new HoldNode(HoldNode::SAMP); break;
 				case TRACKNHOLD : nodedesc->m_Node = new HoldNode(HoldNode::TRACK); break;
 				case RAMP : nodedesc->m_Node = new RampNode(m_SampleRate); break;
+				case DELTRIG : nodedesc->m_Node = new DelTrigNode(); break;
 				default: assert(0); break;
 			}
 			

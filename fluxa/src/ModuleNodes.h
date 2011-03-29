@@ -167,5 +167,14 @@ private:
 	Delay m_Delay;
 };
 
+class DelTrigNode : public GraphNode
+{
+public:
+	DelTrigNode();
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+};
+
+
 #endif
 
