@@ -49,6 +49,19 @@ private:
 	unsigned int m_Shape;
 };
 
+class LfoNode : public GraphNode
+{
+public:
+	LfoNode(unsigned int Shape, unsigned int SampleRate);
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+	
+private:
+	WaveTable m_WaveTable;
+	unsigned int m_Shape;
+};
+
+
 class KSNode : public GraphNode
 {
 public:

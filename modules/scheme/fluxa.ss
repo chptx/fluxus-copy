@@ -20,8 +20,9 @@
 (provide
 		play play-now seq clock-map clock-split volume pan max-synths note searchpath reset eq comp
 		sine saw tri squ white pink adsr add sub mul div pow mooglp moogbp mooghp formant sample
-		crush distort klip echo ks xfade s&h t&h ramp deltrig reload zmod sync-tempo sync-clock fluxa-init fluxa-debug set-global-offset
-		set-bpm-mult logical-time inter pick set-scale)
+		crush distort klip echo ks xfade s&h t&h ramp deltrig lfo-sine lfo-saw lfo-revsaw lfo-tri 
+		lfo-squ load zmod sync-tempo sync-clock fluxa-init fluxa-debug set-global-offset set-bpm-mult 
+		logical-time inter pick set-scale)
 
 (define time-offset 0.0)
 (define sync-offset 0.0)
@@ -34,6 +35,8 @@
 (define MOOGHP 15) (define FORMANT 16) (define SAMPLE 17) (define CRUSH 18)
 (define DISTORT 19) (define CLIP 20) (define ECHO 21) (define KS 22) (define XFADE 23)
 (define SAMPNHOLD 24) (define TRACKNHOLD 25) (define RAMP 26) (define DELTRIG 27)
+(define LFOSIN 28) (define LFOSAW 29) (define LFOREVSAW 30) (define LFOTRI 31)
+(define LFOSQU 32)
 
 (define (fluxa-init)
   (osc-destination "osc.udp://127.0.0.1:4004")
@@ -570,9 +573,9 @@
 ;; Returns: node-id-number
 ;; Description:
 ;; Crossfader. Linearly crossfades between two signals or values 
-;; "mix" ranges from -1 t0 1.
+;; "mix" ranges from 0 t0 1.
 ;; Example:
-;; (play-now (xfade (sine 200) (saw 100) (sine 4))
+;; (play-now (xfade (sine 200) (saw 100) (lfo-sine 1))
 ;; EndFunctionDoc
 
 (define (xfade s0 s1 mix)
@@ -625,6 +628,71 @@
 
 (define (deltrig sig del )
   (operator DELTRIG (list sig del))) 
+
+;; StartFunctionDoc-en
+;; lfo-sine period-number-or-node 
+;; Returns: node-id-number
+;; Description:
+;; Sine-wave oscillator made for modulation. Takes a period of time as input, output ranges from 0 to 1
+;; Syncs to note triggers
+;; Example:
+;; (play-now (mooglp (saw 330) (lfo-sine 1) 0.3))
+;; EndFunctionDoc
+
+(define (lfo-sine per)
+  (operator LFOSIN (list per))) 
+
+;; StartFunctionDoc-en
+;; lfo-saw period-number-or-node 
+;; Returns: node-id-number
+;; Description:
+;; Saw-wave oscillator made for modulation. Takes a period of time as input, output ranges from 0 to 1
+;; Syncs to note triggers
+;; Example:
+;; (play-now (mooglp (saw 330) (lfo-saw 1) 0.3))
+;; EndFunctionDoc
+
+(define (lfo-saw per)
+  (operator LFOSAW (list per))) 
+
+;; StartFunctionDoc-en
+;; lfo-revsaw period-number-or-node 
+;; Returns: node-id-number
+;; Description:
+;; Reverse saw-wave oscillator made for modulation. Takes a period of time as input, output ranges from 0 to 1
+;; Syncs to note triggers
+;; Example:
+;; (play-now (mooglp (saw 330) (lfo-revsaw 1) 0.3))
+;; EndFunctionDoc
+
+(define (lfo-revsaw per)
+  (operator LFOREVSAW (list per))) 
+
+;; StartFunctionDoc-en
+;; lfo-tri period-number-or-node 
+;; Returns: node-id-number
+;; Description:
+;; Sine oscillator made for modulation. Takes a period of time as input, output ranges from 0 to 1
+;; Syncs to note triggers
+;; Example:
+;; (play-now (mooglp (saw 330) (lfo-tri 1) 0.3))
+;; EndFunctionDoc
+
+(define (lfo-tri per)
+  (operator LFOTRI (list per))) 
+
+;; StartFunctionDoc-en
+;; lfo-squ period-number-or-node 
+;; Returns: node-id-number
+;; Description:
+;; Sine oscillator made for modulation. Takes a period of time as input, output ranges from 0 to 1
+;; Syncs to note triggers
+;; Example:
+;; (play-now (mooglp (saw 330) (lfo-squ 1) 0.3))
+;; EndFunctionDoc
+
+(define (lfo-squ per)
+  (operator LFOSQU (list per))) 
 
 
 ;; StartFunctionDoc-en

@@ -62,7 +62,9 @@ public:
 	enum {SINE,SQUARE,SAW,REVSAW,TRIANGLE,PULSE1,PULSE2,NOISE,PINKNOISE};
 
 	virtual void Process(unsigned int BufSize, Sample &In);
+	virtual void ProcessLfo(unsigned int BufSize, Sample &In);
 	virtual void ProcessFM(unsigned int BufSize, Sample &In, const Sample &Pitch);
+	virtual void ProcessLfoFM(unsigned int BufSize, Sample &In, const Sample &Period);
 	void SimpleProcess(unsigned int BufSize, Sample &In);
 	virtual void Trigger(float time, float pitch, float slidepitch, float vol);
 	virtual void Reset();
@@ -89,7 +91,9 @@ private:
 	float m_SlideLength;
 	float m_TimePerSample;
 	float m_TablePerSample;
-		
+	float m_Time;
+	float m_SampleTime;
+	
 	static Sample m_Table[NUM_TABLES];
 	static unsigned int m_TableLength;
 };

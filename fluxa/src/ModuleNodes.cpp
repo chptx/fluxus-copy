@@ -60,6 +60,49 @@ void OscNode::Process(unsigned int bufsize)
 	}
 }
 
+//like OscNode, except;
+//output is in the 0-1 range,
+//these only start running at the trigger time 
+//and the frequency is set using the duration of the cycle
+LfoNode::LfoNode(unsigned int Shape, unsigned int SampleRate):
+GraphNode(1),
+m_WaveTable(SampleRate),
+m_Shape(Shape)
+{
+	m_WaveTable.SetType(m_Shape);
+}
+
+void LfoNode::Trigger(float time)
+{
+	TriggerChildren(time);
+
+	float period=1;
+	if (ChildExists(0) && GetChild(0)->IsTerminal()) 
+	{
+		period=fabs( GetChild(0)->GetValue() );
+	}
+	m_WaveTable.Trigger(time, 1.0f / period, 1.0f / period, 1);
+}
+
+void LfoNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	ProcessChildren(bufsize);
+	
+	if (ChildExists(0) && !GetChild(0)->IsTerminal())
+	{
+		m_WaveTable.ProcessLfoFM(bufsize, m_Output, GetInput(0));
+	}
+	else
+	{
+		m_WaveTable.ProcessLfo(bufsize, m_Output);
+	}
+}
+
+
 ADSRNode::ADSRNode(unsigned int SampleRate):
 GraphNode(4),
 m_Envelope(SampleRate)
@@ -495,9 +538,8 @@ void XFadeNode::Process(unsigned int bufsize)
 					float v0 = GetChild(0)->GetValue();
 					float v1 = GetChild(1)->GetValue();
 					float mix = GetChild(2)->GetValue();
-					if (mix < -1) mix = -1;
+					if (mix < 0) mix = 0;
 					else if (mix > 1) mix = 1;
-					mix = (0.5 + (mix * 0.5));
 					value = (v0 * (1 - mix)) + (v1 * mix);
 			
 					for (unsigned int n=0; n<bufsize; n++) m_Output[n]=value;
@@ -510,9 +552,8 @@ void XFadeNode::Process(unsigned int bufsize)
 					for (unsigned int n=0; n<bufsize; n++)
 					{
 						float mix = GetChild(2)->GetOutput()[n];	
-						if (mix < -1) mix = -1;
+						if (mix < 0) mix = 0;
 						else if (mix > 1) mix = 1;
-						mix = (0.5 + (mix * 0.5));
 						
 						m_Output[n]=(v0 * (1 - mix)) + (v1 * mix);
 					}
@@ -524,14 +565,14 @@ void XFadeNode::Process(unsigned int bufsize)
 				{
 					float v0 = GetChild(0)->GetValue();
 					float mix = GetChild(2)->GetValue();
-					if (mix < -1) mix = -1;
+					if (mix < 0) mix = 0;
 					else if (mix > 1) mix = 1;
-					mix = (0.5 + (mix * 0.5));
+					float oneminmix = (1 - mix);
 				
 					for (unsigned int n=0; n<bufsize; n++)
 					{
 						
-						m_Output[n]=(v0 * (1 - mix)) + (GetChild(1)->GetOutput()[n] * mix);
+						m_Output[n]=(v0 * oneminmix) + (GetChild(1)->GetOutput()[n] * mix);
 					}
 				}
 				else
@@ -541,9 +582,8 @@ void XFadeNode::Process(unsigned int bufsize)
 					for (unsigned int n=0; n<bufsize; n++)
 					{
 						float mix = GetChild(2)->GetOutput()[n];
-						if (mix < -1) mix = -1;
+						if (mix < 0) mix = 0;
 						else if (mix > 1) mix = 1;
-						mix = (0.5 + (mix * 0.5));
 						
 						m_Output[n]=(v0 * (1 - mix)) + (GetChild(1)->GetOutput()[n] * mix);
 					}
@@ -558,14 +598,14 @@ void XFadeNode::Process(unsigned int bufsize)
 				{
 					float v1 = GetChild(1)->GetValue();
 					float mix = GetChild(2)->GetValue();
-					if (mix < -1) mix = -1;
+					if (mix < 0) mix = 0;
 					else if (mix > 1) mix = 1;
-					mix = (0.5 + (mix * 0.5));
+					float oneminmix = (1 - mix);
 					
 					for (unsigned int n=0; n<bufsize; n++)
 					{
 						
-						m_Output[n]=(GetChild(0)->GetOutput()[n] * (1 - mix)) + (v1 * mix);
+						m_Output[n]=(GetChild(0)->GetOutput()[n] * oneminmix) + (v1 * mix);
 					}
 				}
 				else
@@ -575,9 +615,8 @@ void XFadeNode::Process(unsigned int bufsize)
 					for (unsigned int n=0; n<bufsize; n++)
 					{
 						float mix = GetChild(2)->GetOutput()[n];
-						if (mix < -1) mix = -1;
+						if (mix < 0) mix = 0;
 						else if (mix > 1) mix = 1;
-						mix = (0.5 + (mix * 0.5));
 						m_Output[n]=(GetChild(0)->GetOutput()[n] * (1 - mix)) + (v1 * mix);
 					}
 				}
@@ -587,12 +626,12 @@ void XFadeNode::Process(unsigned int bufsize)
 				if (GetChild(2)->IsTerminal())
 				{
 					float mix = GetChild(2)->GetValue();
-					if (mix < -1) mix = -1;
+					if (mix < 0) mix = 0;
 					else if (mix > 1) mix = 1;
-					mix = (0.5 + (mix * 0.5));
+					float oneminmix = (1 - mix);
 					for (unsigned int n=0; n<bufsize; n++)
 					{
-						m_Output[n]=(GetChild(0)->GetOutput()[n] * (1 - mix)) + (GetChild(1)->GetOutput()[n] * mix);
+						m_Output[n]=(GetChild(0)->GetOutput()[n] * oneminmix) + (GetChild(1)->GetOutput()[n] * mix);
 					}
 				}
 				else
@@ -600,9 +639,8 @@ void XFadeNode::Process(unsigned int bufsize)
 					for (unsigned int n=0; n<bufsize; n++)
 					{
 						float mix = GetChild(2)->GetOutput()[n];
-						if (mix < -1) mix = -1;
+						if (mix < 0) mix = 0;
 						else if (mix > 1) mix = 1;
-						mix = (0.5 + (mix * 0.5));
 						m_Output[n]=(GetChild(0)->GetOutput()[n] * (1 - mix)) + (GetChild(1)->GetOutput()[n] * mix);
 					}
 				}

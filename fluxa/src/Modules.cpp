@@ -206,6 +206,7 @@ void WaveTable::Trigger(float time, float pitch, float slidepitch, float vol)
 	if (m_SlideLength==0) m_Pitch=pitch; 
 	m_Volume=vol*1.0f;
 	m_SlideTime=0;
+	m_Time=time;
 }
 
 void WaveTable::Process(unsigned int BufSize, Sample &In)
@@ -256,6 +257,72 @@ void WaveTable::Process(unsigned int BufSize, Sample &In)
 	}
 }
 
+void WaveTable::ProcessLfo(unsigned int BufSize, Sample &In)
+{
+	if (m_SlideLength>0)
+	{
+		float Incr;
+		float Freq;
+		float StartFreq=m_Pitch;
+		StartFreq*=m_FineFreq;
+		if (m_Octave>0) StartFreq*=1<<(m_Octave);
+		if (m_Octave<0) StartFreq/=1<<(-m_Octave);
+
+		float SlideFreq=m_TargetPitch;
+		SlideFreq*=m_FineFreq;
+		if (m_Octave>0) SlideFreq*=1<<(m_Octave);
+		if (m_Octave<0) SlideFreq/=1<<(-m_Octave);
+
+		for (unsigned int n=0; n<BufSize; n++)
+		{	
+			float t=m_SlideTime/m_SlideLength;
+			if (t>1) Freq=SlideFreq;
+			else Freq=(1-t)*StartFreq+t*SlideFreq;
+			Incr = Freq*m_TablePerSample;
+			
+			if (m_Time<0) //wait for trigger time to accomplish sync
+			{
+				m_Time+=m_TimePerSample;
+				In[n]= 0.5 + (0.5*m_Table[(int)m_Type][m_CyclePos]);
+			}
+			else
+			{
+				m_CyclePos+=Incr;
+				if (m_CyclePos<0) m_CyclePos=m_TableLength-m_CyclePos;
+				m_CyclePos=fmod(m_CyclePos,m_TableLength-1);	
+				In[n]= 0.5f + (0.5f * m_Table[(int)m_Type][m_CyclePos]);	
+				m_SlideTime+=m_TimePerSample;
+			}
+		}
+	}
+	else
+	{
+		float Incr;
+		float Freq=m_Pitch;
+		Freq*=m_FineFreq;
+		if (m_Octave>0) Freq*=1<<(m_Octave);
+		if (m_Octave<0) Freq/=1<<(-m_Octave);
+		Incr = Freq*m_TablePerSample;
+
+		for (unsigned int n=0; n<BufSize; n++)
+		{	
+			if (m_Time<0) //wait for trigger time to accomplish sync
+			{
+				m_Time+=m_TimePerSample;
+				In[n]= 0.5 + (0.5*m_Table[(int)m_Type][m_CyclePos]);
+			}
+			else
+			{
+				m_CyclePos+=Incr;
+				if (m_CyclePos<0) m_CyclePos=m_TableLength-m_CyclePos;
+				m_CyclePos=fmod(m_CyclePos,m_TableLength-1);
+				In[n]= 0.5f + (0.5f * m_Table[(int)m_Type][m_CyclePos]);
+			}
+		}
+	}
+}
+
+
 void WaveTable::ProcessFM(unsigned int BufSize, Sample &In, const Sample &Pitch)
 {
 	for (unsigned int n=0; n<BufSize; n++)
@@ -269,6 +336,30 @@ void WaveTable::ProcessFM(unsigned int BufSize, Sample &In, const Sample &Pitch)
 		}
 	}
 }
+
+void WaveTable::ProcessLfoFM(unsigned int BufSize, Sample &In, const Sample &Period)
+{
+	for (unsigned int n=0; n<BufSize; n++)
+	{			
+		if (m_Time<0) //wait for trigger time to accomplish sync
+		{
+			m_Time+=m_TimePerSample;
+			In[n]= 0.5 + (0.5*m_Table[(int)m_Type][m_CyclePos]);
+		}
+		else
+		{
+			if ( Period[n] > 0)
+			{
+				float pitch = 1.0f / Period[n];
+				m_CyclePos+=pitch*m_TablePerSample;
+				if (m_CyclePos<0) m_CyclePos=m_TableLength-m_CyclePos;
+				m_CyclePos=fmod(m_CyclePos,m_TableLength-1);
+			}
+			In[n]= 0.5f + (0.5f * m_Table[(int)m_Type][m_CyclePos]);
+		}
+	}
+}
+
 
 void WaveTable::SimpleProcess(unsigned int BufSize, Sample &In)
 {

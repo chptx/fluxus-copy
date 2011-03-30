@@ -77,6 +77,11 @@ void Graph::Init()
 				case TRACKNHOLD : nodedesc->m_Node = new HoldNode(HoldNode::TRACK); break;
 				case RAMP : nodedesc->m_Node = new RampNode(m_SampleRate); break;
 				case DELTRIG : nodedesc->m_Node = new DelTrigNode(); break;
+				case LFOSIN : nodedesc->m_Node = new LfoNode((int)WaveTable::SINE,m_SampleRate); break;
+				case LFOSAW : nodedesc->m_Node = new LfoNode((int)WaveTable::SAW,m_SampleRate); break;
+				case LFOREVSAW : nodedesc->m_Node = new LfoNode((int)WaveTable::REVSAW,m_SampleRate); break;
+				case LFOTRI : nodedesc->m_Node = new LfoNode((int)WaveTable::TRIANGLE,m_SampleRate); break;
+				case LFOSQU : nodedesc->m_Node = new LfoNode((int)WaveTable::SQUARE,m_SampleRate); break;
 				default: assert(0); break;
 			}
 			
