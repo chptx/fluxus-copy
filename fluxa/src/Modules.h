@@ -273,8 +273,7 @@ public:
 
 private:
 	float m_Vowel;
-		
-	float memory[5][10];
+	double memory[5][10];
 };
 
 // a wrapper for the other filters
