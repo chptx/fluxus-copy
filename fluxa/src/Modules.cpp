@@ -128,13 +128,13 @@ void WaveTable::WriteWaves()
 		m_Table[n].Allocate(m_TableLength);
 	}
 	
-	float RadCycle = (M_PI/180)*360;
+	
 	float Pos=0; 
 
 	for (unsigned int n=0; n<m_TableLength; n++)
 	{
 		if (n==0) Pos=0;
-		else Pos=(n/(float)m_TableLength)*RadCycle;
+		else Pos=(n/(float)m_TableLength)*TWOPI;
 		m_Table[NOISE].Set(n,RandRange(-1,1));		
 	}
 	
@@ -157,7 +157,7 @@ void WaveTable::WriteWaves()
 	for (unsigned int n=0; n<m_TableLength; n++)
 	{
 		if (n==0) Pos=0;
-		else Pos=(n/(float)m_TableLength)*RadCycle;
+		else Pos=(n/(float)m_TableLength)*TWOPI;
 		m_Table[SINE].Set(n,sin(Pos));		
 	}
 
@@ -398,13 +398,12 @@ void SimpleWave::Reset()
 
 void SimpleWave::WriteWaves()
 {
-	float RadCycle = (M_PI/180)*360;
 	float Pos=0;
 
 	for (unsigned int n=0; n<m_TableLength; n++)
 	{
 		if (n==0) Pos=0;
-		else Pos=(n/(float)m_TableLength)*RadCycle;
+		else Pos=(n/(float)m_TableLength)*TWOPI;
 		m_Table.Set(n,sin(Pos));		
 	}
 }

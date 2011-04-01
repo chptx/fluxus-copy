@@ -29,7 +29,8 @@ static const int NUM_TABLES = 9;
 static const int DEFAULT_TABLE_LEN = 1024;
 static const int FILTER_GRANULARITY = 10;
 static const float PI=3.141592654;
-static const float RAD=(PI/180.0)*360.0;
+static const float TWOPI=PI * 2;
+
 
 float RandRange(float L, float H);
 void Crush(Sample &buf, float freq, float bits);
