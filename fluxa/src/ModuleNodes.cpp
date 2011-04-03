@@ -348,7 +348,7 @@ void EffectNode::Process(unsigned int bufsize)
         if (m_Type==CLIP)
         {
             m_Output=GetInput(0);
-            if (GetChild(0)->IsTerminal())
+            if (GetChild(1)->IsTerminal())
             {
                 HardClip(m_Output, GetChild(1)->GetCVValue());
             }
@@ -357,19 +357,32 @@ void EffectNode::Process(unsigned int bufsize)
                 MovingHardClip(m_Output, GetInput(1));
             }
         }
+        else if (m_Type==DISTORT)
+        {
+            m_Output=GetInput(0);
+            if (GetChild(1)->IsTerminal())
+            {
+                Distort(m_Output, GetChild(1)->GetCVValue());
+            }
+            else
+            {
+                MovingDistort(m_Output, GetInput(1));
+            }
+        }
         else if (ChildExists(2))
-        {		
+        {
             switch (m_Type)
             {
-			    case CRUSH : m_Output=GetInput(0); Crush(m_Output, GetChild(1)->GetCVValue(), GetChild(2)->GetCVValue()); break;
-			    case DISTORT : m_Output=GetInput(0); Distort(m_Output, GetChild(1)->GetCVValue()); break;
-                case DELAY : 
-			    {  
+                case CRUSH : m_Output=GetInput(0); Crush(m_Output, GetChild(1)->GetCVValue(), GetChild(2)->GetCVValue()); break;
+                case DELAY :
+                {
                     m_Delay.SetDelay(GetChild(1)->GetCVValue());
                     m_Delay.SetFeedback(GetChild(2)->GetCVValue());
                     m_Delay.Process(bufsize, GetInput(0), m_Output); break;
                 }
-                case CLIP : assert(0); break;
+				default :
+					assert(0);
+					break;
             }
 		}
 	}
@@ -421,4 +434,249 @@ void KSNode::Process(unsigned int bufsize)
 	}
 	
 	m_KS.Process(bufsize, m_Output);
+}
+
+XFadeNode::XFadeNode():
+GraphNode(3)
+{
+}
+
+void XFadeNode::Trigger(float time)
+{
+	TriggerChildren(time);
+}
+
+void XFadeNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	ProcessChildren(bufsize);
+
+	if (ChildExists(0) && ChildExists(1) && ChildExists(2))
+	{		
+		if (GetChild(0)->IsTerminal())
+		{
+			if (GetChild(1)->IsTerminal())
+			{
+				if (GetChild(2)->IsTerminal())
+				{
+					float value=0;
+					float v0 = GetChild(0)->GetValue();
+					float v1 = GetChild(1)->GetValue();
+					float mix = GetChild(2)->GetValue();
+					if (mix < -1) mix = -1;
+					else if (mix > 1) mix = 1;
+					mix = (0.5 + (mix * 0.5));
+					value = (v0 * (1 - mix)) + (v1 * mix);
+			
+					for (unsigned int n=0; n<bufsize; n++) m_Output[n]=value;
+				}
+				else
+				{
+					float v0 = GetChild(0)->GetValue();
+					float v1 = GetChild(1)->GetValue();
+					
+					for (unsigned int n=0; n<bufsize; n++)
+					{
+						float mix = GetChild(2)->GetOutput()[n];	
+						if (mix < -1) mix = -1;
+						else if (mix > 1) mix = 1;
+						mix = (0.5 + (mix * 0.5));
+						
+						m_Output[n]=(v0 * (1 - mix)) + (v1 * mix);
+					}
+				}
+			}
+			else
+			{
+				if (GetChild(2)->IsTerminal())
+				{
+					float v0 = GetChild(0)->GetValue();
+					float mix = GetChild(2)->GetValue();
+					if (mix < -1) mix = -1;
+					else if (mix > 1) mix = 1;
+					mix = (0.5 + (mix * 0.5));
+				
+					for (unsigned int n=0; n<bufsize; n++)
+					{
+						
+						m_Output[n]=(v0 * (1 - mix)) + (GetChild(1)->GetOutput()[n] * mix);
+					}
+				}
+				else
+				{
+					float v0 = GetChild(0)->GetValue();
+					
+					for (unsigned int n=0; n<bufsize; n++)
+					{
+						float mix = GetChild(2)->GetOutput()[n];
+						if (mix < -1) mix = -1;
+						else if (mix > 1) mix = 1;
+						mix = (0.5 + (mix * 0.5));
+						
+						m_Output[n]=(v0 * (1 - mix)) + (GetChild(1)->GetOutput()[n] * mix);
+					}
+				}
+			}
+		}
+		else
+		{
+			if (GetChild(1)->IsTerminal())
+			{
+				if (GetChild(2)->IsTerminal())
+				{
+					float v1 = GetChild(1)->GetValue();
+					float mix = GetChild(2)->GetValue();
+					if (mix < -1) mix = -1;
+					else if (mix > 1) mix = 1;
+					mix = (0.5 + (mix * 0.5));
+					
+					for (unsigned int n=0; n<bufsize; n++)
+					{
+						
+						m_Output[n]=(GetChild(0)->GetOutput()[n] * (1 - mix)) + (v1 * mix);
+					}
+				}
+				else
+				{
+					float v1 = GetChild(1)->GetValue();
+					
+					for (unsigned int n=0; n<bufsize; n++)
+					{
+						float mix = GetChild(2)->GetOutput()[n];
+						if (mix < -1) mix = -1;
+						else if (mix > 1) mix = 1;
+						mix = (0.5 + (mix * 0.5));
+						m_Output[n]=(GetChild(0)->GetOutput()[n] * (1 - mix)) + (v1 * mix);
+					}
+				}
+			}
+			else
+			{
+				if (GetChild(2)->IsTerminal())
+				{
+					float mix = GetChild(2)->GetValue();
+					if (mix < -1) mix = -1;
+					else if (mix > 1) mix = 1;
+					mix = (0.5 + (mix * 0.5));
+					for (unsigned int n=0; n<bufsize; n++)
+					{
+						m_Output[n]=(GetChild(0)->GetOutput()[n] * (1 - mix)) + (GetChild(1)->GetOutput()[n] * mix);
+					}
+				}
+				else
+				{
+					for (unsigned int n=0; n<bufsize; n++)
+					{
+						float mix = GetChild(2)->GetOutput()[n];
+						if (mix < -1) mix = -1;
+						else if (mix > 1) mix = 1;
+						mix = (0.5 + (mix * 0.5));
+						m_Output[n]=(GetChild(0)->GetOutput()[n] * (1 - mix)) + (GetChild(1)->GetOutput()[n] * mix);
+					}
+				}
+			}
+		}
+	}
+	
+}
+
+HoldNode::HoldNode(Type t):
+GraphNode(2),
+m_Type(t),
+m_heldValue(0), 
+m_lastCtrlVal(0)
+{
+}
+
+void HoldNode::Trigger(float time)
+{
+	TriggerChildren(time);
+}
+
+void HoldNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	ProcessChildren(bufsize);
+
+	if (ChildExists(0) && ChildExists(1))
+	{
+		if (GetChild(0)->IsTerminal() && GetChild(1)->IsTerminal())
+		{
+			if (GetChild(1)->GetValue() > 0) m_heldValue=GetChild(0)->GetValue();
+			for (unsigned int n=0; n<bufsize; n++) m_Output[n]=m_heldValue;
+		}			
+		else if (!GetChild(0)->IsTerminal() && GetChild(1)->IsTerminal())
+		{
+			if (GetChild(1)->GetValue() <= 0)
+			{
+				for (unsigned int n=0; n<bufsize; n++) m_Output[n]=m_heldValue;
+			}
+			else
+			{
+				switch (m_Type)
+				{
+					case SAMP:
+					{
+						for (unsigned int n=0; n<bufsize; n++)
+						{
+							if (m_lastCtrlVal <= 0)	m_heldValue = GetChild(0)->GetOutput()[n];
+							m_lastCtrlVal = GetChild(1)->GetValue();
+							m_Output[n]=m_heldValue;
+						}
+						break;
+					} 
+					case TRACK:
+					{
+						for (unsigned int n=0; n<bufsize; n++) 
+						{
+							m_Output[n] = GetChild(0)->GetOutput()[n];
+						}
+						break;
+					}
+				}
+			}
+		}
+		else if (GetChild(0)->IsTerminal() && !GetChild(1)->IsTerminal())
+		{
+			for (unsigned int n=0; n<bufsize; n++)
+			{
+				if  (GetChild(1)->GetOutput()[n] > 0)
+				{
+					m_heldValue = GetChild(0)->GetValue();
+				}
+				m_Output[n] = m_heldValue;
+			}					
+		}
+		else 
+		{
+			switch (m_Type)
+			{
+				case SAMP:
+				{
+					for (unsigned int n=0; n<bufsize; n++)
+					{
+						if (m_lastCtrlVal <= 0 && GetChild(1)->GetOutput()[n] > 0) m_heldValue = GetChild(0)->GetOutput()[n];
+						m_lastCtrlVal = GetChild(1)->GetOutput()[n];
+						m_Output[n] = m_heldValue;
+					}
+					break;
+				} 
+				case TRACK: 
+				{
+					for (unsigned int n=0; n<bufsize; n++)
+					{
+						if (GetChild(1)->GetOutput()[n] > 0) m_heldValue = GetChild(0)->GetOutput()[n];
+						m_Output[n] = m_heldValue;
+					}
+					break;
+				}
+			}
+		}
+	}
 }

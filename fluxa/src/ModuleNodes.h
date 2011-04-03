@@ -61,6 +61,30 @@ private:
 	unsigned int m_Shape;
 };
 
+class XFadeNode : public GraphNode
+{
+public:
+    XFadeNode();
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+};
+
+class HoldNode : public GraphNode
+{
+public:
+	enum Type{SAMP, TRACK};
+	
+	HoldNode(Type t);
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+
+private:
+	Type m_Type;
+	float m_heldValue, m_lastCtrlVal;
+
+};
+
+
 class ADSRNode : public GraphNode
 {
 public:

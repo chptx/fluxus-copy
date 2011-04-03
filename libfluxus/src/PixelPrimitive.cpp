@@ -303,9 +303,10 @@ void PixelPrimitive::Upload()
 	m_ReadyForUpload = true;
 }
 
-void PixelPrimitive::Download()
+void PixelPrimitive::Download(unsigned handle /* = 0 */)
 {
 	m_ReadyForDownload = true;
+	m_DownloadTextureHandle = handle;
 }
 
 void PixelPrimitive::Load(const string &filename)
@@ -334,7 +335,7 @@ void PixelPrimitive::Save(const string &filename) const
 	}
 }
 
-void PixelPrimitive::Bind()
+void PixelPrimitive::Bind(int textureIndex /* = -1*/)
 {
 	#ifndef DISABLE_RENDER_TO_TEXTURE
 	if (!m_FBOSupported)
@@ -345,7 +346,10 @@ void PixelPrimitive::Bind()
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, m_FBO);
 
 	/* set rendering */
-	glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT + m_RenderTextureIndex);
+	if (textureIndex == -1)
+		textureIndex = m_RenderTextureIndex;
+
+	glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT + textureIndex);
 	#endif
 }
 
@@ -502,30 +506,42 @@ void PixelPrimitive::DownloadPData()
 {
 	if (m_FBOSupported)
 	{
-		Bind();
-		GLubyte *data = GetScreenBuffer(0, 0, m_Width, m_Height, 1);
-		for (unsigned int i = 0; i < m_Width * m_Height; i++)
+		unsigned textureIndex = m_RenderTextureIndex;
+		if (m_DownloadTextureHandle == 0)
 		{
-			(*m_ColourData)[i].r = data[i*3] / 255.0f;
-			(*m_ColourData)[i].g = data[i*3+1] / 255.0f;
-			(*m_ColourData)[i].b = data[i*3+2] / 255.0f;
+			Bind();
 		}
-        free(data);
+		else
+		{
+			textureIndex = GetTextureIndex(m_DownloadTextureHandle);
+			Bind(textureIndex);
+		}
+
+		glReadBuffer(GL_COLOR_ATTACHMENT0_EXT + textureIndex);
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glReadPixels(0, 0, m_Width, m_Height, GL_RGBA, GL_FLOAT, &(*m_ColourData)[0]);
+
 		Unbind();
 	}
 }
 
-void PixelPrimitive::SetRenderTexture(unsigned id)
+unsigned PixelPrimitive::GetTextureIndex(unsigned id)
 {
-	m_RenderTextureIndex = 0;
+	int index = 0;
 	for (unsigned i = 0; i < m_MaxTextures; i++)
 	{
 		if (m_Textures[i] == id)
 		{
-			m_RenderTextureIndex = i;
+			index = i;
 			break;
 		}
 	}
+	return index;
+}
+
+void PixelPrimitive::SetRenderTexture(unsigned id)
+{
+	m_RenderTextureIndex = GetTextureIndex(id);
 	m_RenderTexture = m_Textures[m_RenderTextureIndex];
 }
 

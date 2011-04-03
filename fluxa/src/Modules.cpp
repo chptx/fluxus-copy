@@ -57,6 +57,19 @@ void Distort(Sample &buf, float amount)
 	}
 }
 
+
+void MovingDistort(Sample &buf, const Sample &amount)
+{
+	for(unsigned int i=0; i<buf.GetLength(); i++)
+	{
+		float a =fabs(amount[i]);
+        if (a>0.99) a = 0.99;
+		float k=2*a/(1-a);
+		
+        buf[i]=((1+k)*buf[i]/(1+k*fabs(buf[i])))*(1-a);
+	}
+}
+
 void HardClip(Sample &buf, float level)
 {
 	if (feq(level,0,0.0001)) level==0.0001;
@@ -627,7 +640,7 @@ void MoogFilter::Process(unsigned int BufSize, Sample &In, Sample *CutoffCV, Sam
 ///////////////////////////////////////////////////////////////////////////
 
 //-------------------------------------------------------------VOWEL COEFFICIENTS
-const float coeff[5][11]= {
+const double coeff[5][11]= {
 { 8.11044e-06,
 8.943665402, -36.83889529, 92.01697887, -154.337906, 181.6233289,
 -151.8651235,   89.09614114, -35.10298511, 8.388101016, -0.923313471  ///A
@@ -682,18 +695,17 @@ void FormantFilter::Process(unsigned int BufSize, Sample &In, Sample *CutoffCV, 
 		for (int v=0; v<5; v++)
 		{
 			res= (float) (coeff[v][0]*in +
-					  coeff[v][1]*memory[v][0] +  
-					  coeff[v][2]*memory[v][1] +
-					  coeff[v][3]*memory[v][2] +
-					  coeff[v][4]*memory[v][3] +
-					  coeff[v][5]*memory[v][4] +
-					  coeff[v][6]*memory[v][5] +
-					  coeff[v][7]*memory[v][6] +
-					  coeff[v][8]*memory[v][7] +
-					  coeff[v][9]*memory[v][8] +
-					  coeff[v][10]*memory[v][9] );
-
-
+                          coeff[v][1]*memory[v][0] +  
+                          coeff[v][2]*memory[v][1] +
+                          coeff[v][3]*memory[v][2] +
+                          coeff[v][4]*memory[v][3] +
+                          coeff[v][5]*memory[v][4] +
+                          coeff[v][6]*memory[v][5] +
+                          coeff[v][7]*memory[v][6] +
+                          coeff[v][8]*memory[v][7] +
+                          coeff[v][9]*memory[v][8] +
+                          coeff[v][10]*memory[v][9]);
+        
 			memory[v][9]=memory[v][8];
 			memory[v][8]=memory[v][7];
 			memory[v][7]=memory[v][6];
@@ -703,7 +715,7 @@ void FormantFilter::Process(unsigned int BufSize, Sample &In, Sample *CutoffCV, 
 			memory[v][3]=memory[v][2];
 			memory[v][2]=memory[v][1];
 			memory[v][1]=memory[v][0];
-			memory[v][0]=(float) res;
+			memory[v][0]=(double) res;
 
 			o[v]=res;
 		}
@@ -1016,3 +1028,4 @@ void KS::Process(unsigned int BufSize, Sample &Out)
 		m_Position=(m_Position+1)%delay;
 	}
 }
+
