@@ -402,5 +402,28 @@ protected:
     MoogFilter m_Filter;
 };
 
+class KasF : public Module
+{
+public:
+	KasF(int SampleRate);
+	virtual ~KasF() {}
+	
+	virtual void Process(unsigned int BufSize, Sample &In, Sample &CutoffCV,	Sample &ResCV,	Sample &DriveCV,	Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, Sample &CutoffCV,	Sample &ResCV,	float DriveCV, 		Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, Sample &CutoffCV,	float ResCV,	Sample &DriveCV, 	Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, Sample &CutoffCV,	float ResCV,	float DriveCV, 		Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, float CutoffCV, 		Sample &ResCV,	Sample &DriveCV, 	Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, float CutoffCV, 		Sample &ResCV,	float DriveCV, 		Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, float CutoffCV, 		float ResCV,	Sample &DriveCV, 	Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, float CutoffCV, 		float ResCV,	float DriveCV,	 	Sample &Out);
+	
+	virtual void Trigger(float time);
+	virtual void Reset();
+
+protected:
+	float m_StoreA, m_StoreB, m_Phase, m_PhasePerSample, m_LastIn;
+	
+};
+
 
 #endif

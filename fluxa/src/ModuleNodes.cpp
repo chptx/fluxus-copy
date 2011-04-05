@@ -787,3 +787,61 @@ void DelTrigNode::Process(unsigned int bufsize)
 	}
 }
 
+//for the method to this madness see the relevant section of Modules.cpp
+KasFiltNode::KasFiltNode(unsigned int SampleRate):
+GraphNode(4),
+m_KasF(SampleRate)
+{
+}
+
+void KasFiltNode::Trigger(float time)
+{
+	TriggerChildren(time);
+	m_KasF.Trigger(time);
+}
+
+void KasFiltNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	
+	ProcessChildren(bufsize);
+	//rather massive function overloading here, but I'd rather do this than skimp on live modulation or on cpu usage.
+	if ( ChildExists(0) && ChildExists(1) && ChildExists(2) && ChildExists(3))
+	{
+		if (!GetChild(0)->IsTerminal() && !GetChild(1)->IsTerminal() && !GetChild(2)->IsTerminal() && GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetInput(1), GetInput(2), GetChild(3)->GetValue(), m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && GetChild(1)->IsTerminal() && !GetChild(2)->IsTerminal() && GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetChild(1)->GetValue(), GetInput(2), GetChild(3)->GetValue(), m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && !GetChild(1)->IsTerminal() && GetChild(2)->IsTerminal() && GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetInput(1),  GetChild(2)->GetValue(), GetChild(3)->GetValue(), m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && GetChild(1)->IsTerminal() && GetChild(2)->IsTerminal() && GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetChild(1)->GetValue(),  GetChild(2)->GetValue(), GetChild(3)->GetValue(),  m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && !GetChild(1)->IsTerminal() && !GetChild(2)->IsTerminal() && !GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetInput(1), GetInput(2), GetInput(3), m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && GetChild(1)->IsTerminal() && !GetChild(2)->IsTerminal() && !GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetChild(1)->GetValue(), GetInput(2), GetInput(3), m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && !GetChild(1)->IsTerminal() && GetChild(2)->IsTerminal() && !GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetInput(1),  GetChild(2)->GetValue(), GetInput(3), m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && GetChild(1)->IsTerminal() && GetChild(2)->IsTerminal() && !GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetChild(1)->GetValue(),  GetChild(2)->GetValue(), GetInput(3),  m_Output);
+		}
+	}
+}

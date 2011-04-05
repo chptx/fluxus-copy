@@ -188,6 +188,17 @@ public:
 	virtual void Process(unsigned int bufsize);
 };
 
+class KasFiltNode : public GraphNode
+{
+public:
+	KasFiltNode(unsigned int SampleRate);
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+	
+private:
+	KasF m_KasF;
+};
+
 
 #endif
 

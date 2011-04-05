@@ -21,7 +21,7 @@
 		play play-now seq clock-map clock-split volume pan max-synths note searchpath reset eq comp
 		sine saw tri squ white pink adsr add sub mul div pow mooglp moogbp mooghp formant sample
 		crush distort klip echo ks xfade s&h t&h ramp deltrig lfo-sine lfo-saw lfo-revsaw lfo-tri 
-		lfo-squ load zmod sync-tempo sync-clock fluxa-init fluxa-debug set-global-offset set-bpm-mult 
+		lfo-squ kas-filter load zmod sync-tempo sync-clock fluxa-init fluxa-debug set-global-offset set-bpm-mult 
 		logical-time inter pick set-scale)
 
 (define time-offset 0.0)
@@ -36,7 +36,7 @@
 (define DISTORT 19) (define CLIP 20) (define ECHO 21) (define KS 22) (define XFADE 23)
 (define SAMPNHOLD 24) (define TRACKNHOLD 25) (define RAMP 26) (define DELTRIG 27)
 (define LFOSIN 28) (define LFOSAW 29) (define LFOREVSAW 30) (define LFOTRI 31)
-(define LFOSQU 32)
+(define LFOSQU 32) (define KASF 33)
 
 (define (fluxa-init)
   (osc-destination "osc.udp://127.0.0.1:4004")
@@ -693,6 +693,19 @@
 
 (define (lfo-squ per)
   (operator LFOSQU (list per))) 
+
+;; StartFunctionDoc-en
+;; kas-filter input-node cutoff-number-or-node resonance-number-or-node shape-optional-number-or-node
+;; Returns: node-id-number
+;; Description:
+;; Undersampling-based lowpass filter with cutoff, resonance and optional wave-shaping at the cutoff frequency.
+;; Based on periodic crossfading between 2 sample&holds. Causes intentional artefacts.
+;; Example:
+;; (play-now (kas-filter (saw 330) 500 0.3))
+;; EndFunctionDoc
+
+(define (kas-filter in cut res [drive 0])
+  (operator KASF (list in cut res drive))) 
 
 
 ;; StartFunctionDoc-en
