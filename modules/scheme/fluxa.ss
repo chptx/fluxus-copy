@@ -456,7 +456,7 @@
 ;; Description:
 ;; Creates a sample playback node
 ;; Example:
-;; (play-now (sample "helicopter.wav" 440))
+;; (play-now (sample "sample.wav" 440))
 ;; EndFunctionDoc
 
 ;; StartFunctionDoc-pt

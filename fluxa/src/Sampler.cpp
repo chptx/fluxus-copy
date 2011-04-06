@@ -125,6 +125,11 @@ void Sampler::Process(uint32 BufSize, Sample &left, Sample &right)
 			float Right = 1-Pan;
 					
 			float rev = 0;
+			if (Speed < 0)
+				{
+				m_Reverse = true;
+				Speed *= -1;
+				}
 			if (m_Reverse) rev = sample->GetLength();
 					
 			for (uint32 n=0; n<BufSize; n++)
