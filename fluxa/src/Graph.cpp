@@ -83,6 +83,7 @@ void Graph::Init()
 				case LFOTRI : nodedesc->m_Node = new LfoNode((int)WaveTable::TRIANGLE,m_SampleRate); break;
 				case LFOSQU : nodedesc->m_Node = new LfoNode((int)WaveTable::SQUARE,m_SampleRate); break;
 				case KASF : nodedesc->m_Node = new KasFiltNode(m_SampleRate); break;
+				case SCRUB : nodedesc->m_Node = new ScrubNode(m_SampleRate); break;
 				default: assert(0); break;
 			}
 			

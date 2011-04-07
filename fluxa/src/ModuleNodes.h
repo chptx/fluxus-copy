@@ -166,6 +166,17 @@ private:
 	Sample m_Temp;
 };
 
+class ScrubNode : public GraphNode
+{
+public:
+	ScrubNode(unsigned int samplerate);
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+
+private:
+	Scrubber m_Scrubber; 
+};
+
 class EffectNode : public GraphNode
 {
 public:

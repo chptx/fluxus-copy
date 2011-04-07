@@ -394,6 +394,34 @@ void SampleNode::Process(unsigned int bufsize)
 	m_Sampler.Process(bufsize, m_Output, m_Temp);
 }
 
+ScrubNode::ScrubNode(unsigned int samplerate):
+GraphNode(2),
+m_Scrubber(samplerate)
+{
+}
+
+void ScrubNode::Trigger(float time)
+{
+	TriggerChildren(time);
+	m_Scrubber.SetSampleId( (int)GetChild(0)->GetCVValue());
+}
+
+void ScrubNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	
+	ProcessChildren(bufsize);
+	m_Output.Zero();
+	if (ChildExists(1) && !GetChild(1)->IsTerminal())
+	{
+		m_Scrubber.Process( bufsize, m_Output, GetInput(1));
+	}
+}
+
+
 EffectNode::EffectNode(Type type, unsigned int samplerate):
 GraphNode(3),
 m_Type(type),

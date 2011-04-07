@@ -158,3 +158,37 @@ void Sampler::Process(uint32 BufSize, Sample &left, Sample &right)
 	}
 }
 
+Scrubber::Scrubber(unsigned int samplerate) :
+m_SampleRate(samplerate),
+m_Track(0)
+{
+}
+
+Scrubber::~Scrubber()
+{
+}
+
+void Scrubber::Process(uint32 BufSize, Sample &out, Sample &control)
+{ 
+	Sample *sample = SampleStore::Get()->GetSample(m_SampleId);
+	unsigned int length = sample->GetLength();
+	
+	if (sample != NULL && length > 0) //avoid lost samples and ones not yet fully loaded.
+	{
+		for (uint32 n=0; n<BufSize; n++)
+		{
+			float input = control[n];
+			if (input >= 0 && input <= 1)
+			{
+				m_Track = input * length;
+			}
+			out[n] = (*sample)[m_Track];
+		}
+	} 
+	
+}
+
+void Scrubber::SetSampleId(int ID)
+{
+	m_SampleId = ID;
+}

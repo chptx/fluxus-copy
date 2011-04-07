@@ -22,6 +22,7 @@
 #include "Sample.h"
 #include "Trace.h"
 
+
 #ifndef NE_SAMPLER
 #define NE_SAMPLER
 
@@ -57,6 +58,20 @@ private:
 	
  	map<EventID,Event> m_ChannelMap;
  	int m_NextEventID;
+};
+
+class Scrubber
+{
+public:
+	Scrubber(unsigned int samplerate);
+	virtual ~Scrubber();
+	virtual void Process(uint32 BufSize, Sample &out, Sample &control);
+	virtual void SetSampleId(int ID);
+	
+private:
+	unsigned int m_SampleRate;
+	unsigned int m_SampleId;
+	float m_Track;
 };
 
 #endif
