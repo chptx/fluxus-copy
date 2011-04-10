@@ -171,21 +171,23 @@ Scrubber::~Scrubber()
 void Scrubber::Process(uint32 BufSize, Sample &out, Sample &control)
 { 
 	Sample *sample = SampleStore::Get()->GetSample(m_SampleId);
-	unsigned int length = sample->GetLength();
 	
-	if (sample != NULL && length > 0) //avoid lost samples and ones not yet fully loaded.
+	if (sample != NULL) //avoid lost samples 
 	{
-		for (uint32 n=0; n<BufSize; n++)
+		unsigned int length = sample->GetLength();
+		if  (length > 0) //avoid not yet fully loaded samples as these currently get things stuck
 		{
-			float input = control[n];
-			if (input >= 0 && input <= 1)
+			for (uint32 n=0; n<BufSize; n++)
 			{
-				m_Track = input * length;
+				float input = control[n];
+				if (input >= 0 && input <= 1)
+				{
+					m_Track = input * length;
+				}
+				out[n] = (*sample)[m_Track];
 			}
-			out[n] = (*sample)[m_Track];
 		}
 	} 
-	
 }
 
 void Scrubber::SetSampleId(int ID)

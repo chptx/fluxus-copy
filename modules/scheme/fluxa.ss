@@ -133,7 +133,9 @@
 ;; EndFunctionDoc
 
 (define (sine a)
-  (operator SINE (list a)))
+  (if (not (or (number? a) (node? a)))
+    (raise-type-error 'sine "number-or-node" a)
+    (operator SINE (list a))))
 
 ;; StartFunctionDoc-en
 ;; saw frequency-number-or-node
@@ -154,8 +156,10 @@
 ;; EndFunctionDoc
 
 (define (saw a)
-  (operator SAW (list a)))
-
+  (if (not (or (number? a) (node? a)))
+    (raise-type-error 'saw "number-or-node" a)
+    (operator SAW (list a))))
+    
 ;; StartFunctionDoc-en
 ;; tri frequency-number-or-node
 ;; Returns: node-id-number
@@ -175,8 +179,10 @@
 ;; EndFunctionDoc
 
 (define (tri a)
-  (operator TRI (list a)))
-
+  (if (not (or (number? a) (node? a)))
+    (raise-type-error 'tri "number-or-node" a)
+    (operator TRI (list a))))
+    
 ;; StartFunctionDoc-en
 ;; squ frequency-number-or-node
 ;; Returns: node-id-number
@@ -196,7 +202,9 @@
 ;; EndFunctionDoc
 
 (define (squ a)
-  (operator SQU (list a)))
+  (if (not (or (number? a) (node? a)))
+    (raise-type-error 'squ "number-or-node" a)
+    (operator SQU (list a))))
 
 ;; StartFunctionDoc-en
 ;; white frequency-number-or-node
@@ -217,7 +225,9 @@
 ;; EndFunctionDoc
 
 (define (white a)
-  (operator WHITE (list a)))
+  (if (not (or (number? a) (node? a)))
+    (raise-type-error 'white "number-or-node" a)
+    (operator WHITE (list a))))
 
 ;; StartFunctionDoc-en
 ;; pink frequency-number-or-node
@@ -238,7 +248,9 @@
 ;; EndFunctionDoc
 
 (define (pink a)
-  (operator PINK (list a)))
+  (if (not (or (number? a) (node? a)))
+    (raise-type-error 'pink "number-or-node" a)
+    (operator PINK (list a))))
 
 ;; StartFunctionDoc-en
 ;; add number-or-node number-or-node
@@ -259,7 +271,10 @@
 ;; EndFunctionDoc
 
 (define (add a b)
-  (operator ADD (list a b)))
+	(cond
+		((not (or (number? a) (node? a))) (raise-type-error 'add "number-or-node" 0 a b))
+		((not (or (number? b) (node? b))) (raise-type-error 'add "number-or-node" 1 a b))
+		(else (operator ADD (list a b)))))
 
 ;; StartFunctionDoc-en
 ;; sub number-or-node number-or-node
@@ -280,8 +295,11 @@
 ;; EndFunctionDoc
 
 (define (sub a b)
-  (operator SUB (list a b)))
-
+	(cond
+		((not (or (number? a) (node? a))) (raise-type-error 'sub "number-or-node" 0 a b))
+		((not (or (number? b) (node? b))) (raise-type-error 'sub "number-or-node" 1 a b))
+		(else (operator SUB (list a b)))))
+		
 ;; StartFunctionDoc-en
 ;; mul number-or-node number-or-node
 ;; Returns: node-id-number
@@ -301,7 +319,10 @@
 ;; EndFunctionDoc
 
 (define (mul a b)
-  (operator MUL (list a b)))
+	(cond
+		((not (or (number? a) (node? a))) (raise-type-error 'mul "number-or-node" 0 a b))
+		((not (or (number? b) (node? b))) (raise-type-error 'mul "number-or-node" 1 a b))
+		(else (operator MUL (list a b)))))
 
 ;; StartFunctionDoc-en
 ;; div number-or-node number-or-node
@@ -322,8 +343,11 @@
 ;; EndFunctionDoc
 
 (define (div a b)
-  (operator DIV (list a b)))
-
+	(cond
+		((not (or (number? a) (node? a))) (raise-type-error 'div "number-or-node" 0 a b))
+		((not (or (number? b) (node? b))) (raise-type-error 'div "number-or-node" 1 a b))
+		(else (operator DIV (list a b)))))
+		
 ;; StartFunctionDoc-en
 ;; pow number-or-node number-or-node
 ;; Returns: node-id-number
@@ -343,7 +367,10 @@
 ;; EndFunctionDoc
 
 (define (pow a b)
-  (operator POW (list a b)))
+	(cond
+		((not (or (number? a) (node? a))) (raise-type-error 'pow "number-or-node" 0 a b))
+		((not (or (number? b) (node? b))) (raise-type-error 'pow "number-or-node" 1 a b))
+		(else (operator POW (list a b)))))
 
 ;; StartFunctionDoc-en
 ;; adsr attack-number-or-node decay-number-or-node sustain-number-or-node release-number-or-node
@@ -363,8 +390,14 @@
 ;; (play-now (mul (sine 440) (adsr 0.1 0.1 0 0)))
 ;; EndFunctionDoc
 
+  
 (define (adsr a d s r)
-  (operator ADSR (list a d s r)))
+	(cond
+		((not (or (number? a) (node? a))) (raise-type-error 'adsr "number-or-node" 0 a d s r))
+		((not (or (number? d) (node? d))) (raise-type-error 'adsr "number-or-node" 1 a d s r))
+		((not (or (number? s) (node? s))) (raise-type-error 'adsr "number-or-node" 2 a d s r))
+		((not (or (number? r) (node? r))) (raise-type-error 'adsr "number-or-node" 3 a d s r))
+		(else (operator ADSR (list a d s r)))))
 
 ;; StartFunctionDoc-en
 ;; mooglp signal-node cutoff-number-or-node resonance-number-or-node
@@ -385,7 +418,11 @@
 ;; EndFunctionDoc
 
 (define (mooglp in cutoff resonance)
-  (operator MOOGLP (list in cutoff resonance)))
+	(cond
+		((not (node? in)) (raise-type-error 'mooglp "node" 0 in cutoff resonance))
+		((not (or (number? cutoff) (node? cutoff))) (raise-type-error 'mooglp "number-or-node" 1 in cutoff resonance))
+		((not (or (number? resonance) (node? resonance))) (raise-type-error 'mooglp "number-or-node" 2 in cutoff resonance))
+		(else (operator MOOGLP (list in cutoff resonance)))))
 
 ;; StartFunctionDoc-en
 ;; moogbp signal-node cutoff-number-or-node resonance-number-or-node
@@ -406,7 +443,11 @@
 ;; EndFunctionDoc
 
 (define (moogbp in cutoff resonance)
-  (operator MOOGBP (list in cutoff resonance)))
+	(cond
+		((not (node? in)) (raise-type-error 'moogbp "node" 0 in cutoff resonance))
+		((not (or (number? cutoff) (node? cutoff))) (raise-type-error 'moogbp "number-or-node" 1 in cutoff resonance))
+		((not (or (number? resonance) (node? resonance))) (raise-type-error 'moogbp "number-or-node" 2 in cutoff resonance))
+		(else (operator MOOGBP (list in cutoff resonance)))))
 
 ;; StartFunctionDoc-en
 ;; mooghp signal-node cutoff-number-or-node resonance-number-or-node
@@ -427,7 +468,11 @@
 ;; EndFunctionDoc
 
 (define (mooghp in cutoff resonance)
-  (operator MOOGHP (list in cutoff resonance)))
+	(cond
+		((not (node? in)) (raise-type-error 'mooghp "node" 0 in cutoff resonance))
+		((not (or (number? cutoff) (node? cutoff))) (raise-type-error 'mooghp "number-or-node" 1 in cutoff resonance))
+		((not (or (number? resonance) (node? resonance))) (raise-type-error 'mooghp "number-or-node" 2 in cutoff resonance))
+		(else (operator MOOGHP (list in cutoff resonance)))))
 
 ;; StartFunctionDoc-en
 ;; formant signal-node cutoff-number-or-node resonance-number-or-node
@@ -447,8 +492,13 @@
 ;; (play-now (mul (formant (squ 440) 0.1 0.4) (adsr 0.1 0.1 0 0)))
 ;; EndFunctionDoc
 
+  
 (define (formant in cutoff resonance)
-  (operator FORMANT (list in cutoff resonance)))
+	(cond
+		((not (node? in)) (raise-type-error 'formant "node" 0 in cutoff resonance))
+		((not (or (number? cutoff) (node? cutoff))) (raise-type-error 'formant "number-or-node" 1 in cutoff resonance))
+		((not (or (number? resonance) (node? resonance))) (raise-type-error 'formant "number-or-node" 2 in cutoff resonance))
+		(else (operator FORMANT (list in cutoff resonance)))))
 
 ;; StartFunctionDoc-en
 ;; sample sample-filename-string frequency-number-or-node
@@ -469,7 +519,10 @@
 ;; EndFunctionDoc
 
 (define (sample filename freq)
-  (operator SAMPLE (list (get-sample-id filename) freq)))
+	(cond
+		((not (string? filename)) (raise-type-error 'sample "string" 0 filename freq))
+		((not (or (number? freq) (node? freq))) (raise-type-error 'sample "number-or-node" 1 filename freq))
+		(else (operator SAMPLE (list (get-sample-id filename) freq)))))
 
 ;; StartFunctionDoc-en
 ;; crush signal-node frequency-number-or-node bit-depth-number-or-node
@@ -490,7 +543,11 @@
 ;; EndFunctionDoc
 
 (define (crush in freq bits)
-  (operator CRUSH (list in bits freq)))
+	(cond
+		((not (node? in)) (raise-type-error 'crush "node" 0 in bits freq))
+		((not (or (number? bits) (node? bits))) (raise-type-error 'crush "number-or-node" 1 in bits freq))
+		((not (or (number? freq) (node? freq))) (raise-type-error 'crush "number-or-node" 2 in bits freq))
+		(else (operator CRUSH (list in bits freq)))))
 
 ;; StartFunctionDoc-en
 ;; distort signal-node amount-number-or-node
@@ -511,7 +568,10 @@
 ;; EndFunctionDoc
 
 (define (distort in amount)
-  (operator DISTORT (list in amount)))
+	(cond
+		((not (node? in)) (raise-type-error 'distort "node" 0 in amount))
+		((not (or (number? amount) (node? amount))) (raise-type-error 'distort "number-or-node" 1 in amount))
+		(else (operator DISTORT (list in amount)))))
 
 ;; StartFunctionDoc-en
 ;; klip signal-node amount-number-or-node
@@ -532,7 +592,10 @@
 ;; EndFunctionDoc
 
 (define (klip in amount)
-  (operator CLIP (list in amount)))
+	(cond
+		((not (node? in)) (raise-type-error 'klip "node" 0 in amount))
+		((not (or (number? amount) (node? amount))) (raise-type-error 'klip "number-or-node" 1 in amount))
+		(else (operator CLIP (list in amount)))))
 
 ;; StartFunctionDoc-en
 ;; echo signal-node delay-time-number-or-node feedback-number-or-node
@@ -553,7 +616,11 @@
 ;; EndFunctionDoc
 
 (define (echo in delaytime feedback)
-  (operator ECHO (list in delaytime feedback)))
+	(cond
+		((not (node? in)) (raise-type-error 'echo "node" 0 in delaytime feedback))
+		((not (or (number? delaytime) (node? delaytime))) (raise-type-error 'echo "number-or-node" 1 in delaytime feedback))
+		((not (or (number? feedback) (node? feedback))) (raise-type-error 'echo "number-or-node" 2 in delaytime feedback))
+		(else (operator ECHO (list in delaytime feedback)))))
 
 ;; StartFunctionDoc-en
 ;; ks freq cutoff resonance
@@ -566,7 +633,11 @@
 ;; EndFunctionDoc
 
 (define (ks freq cutoff resonance)
-  (operator KS (list freq cutoff resonance)))
+	(cond
+		((not (number? freq)) (raise-type-error 'ks "number" 0 freq cutoff resonance))
+		((not (or (number? cutoff) (node? cutoff))) (raise-type-error 'ks "number-or-node" 1 freq cutoff resonance))
+		((not (or (number? resonance) (node? resonance))) (raise-type-error 'ks "number-or-node" 2 freq cutoff resonance))
+		(else (operator KS (list freq cutoff resonance)))))
 
 ;; StartFunctionDoc-en
 ;; xfade signal1-number-or-node signal2-number-or-node mix-number-or-node
@@ -579,7 +650,11 @@
 ;; EndFunctionDoc
 
 (define (xfade s0 s1 mix)
-  (operator XFADE (list s0 s1 mix)))
+	(cond
+		((not (or (number? s0) (node? s0))) (raise-type-error 'xfade "number-or-node" 0 s0 s1 mix))
+		((not (or (number? s1) (node? s1))) (raise-type-error 'xfade "number-or-node" 1 s0 s1 mix))
+		((not (or (number? mix) (node? mix))) (raise-type-error 'xfade "number-or-node" 2 s0 s1 mix))
+		(else (operator XFADE (list s0 s1 mix)))))
 
 ;; StartFunctionDoc-en
 ;; s&h signal1-number-or-node CV-number-or-node 
@@ -591,7 +666,10 @@
 ;; EndFunctionDoc
 
 (define (s&h sig cv)
-  (operator SAMPNHOLD (list sig cv)))
+	(cond
+		((not (or (number? sig) (node? sig))) (raise-type-error 's&h "number-or-node" 0 sig cv))
+		((not (or (number? cv) (node? cv))) (raise-type-error 's&h "number-or-node" 1 sig cv))
+		(else (operator SAMPNHOLD (list sig cv)))))
 
 ;; StartFunctionDoc-en
 ;; t&h signal1-number-or-node CV-number-or-node 
@@ -603,7 +681,10 @@
 ;; EndFunctionDoc
 
 (define (t&h sig cv)
-  (operator TRACKNHOLD (list sig cv)))
+	(cond
+		((not (or (number? sig) (node? sig))) (raise-type-error 't&h "number-or-node" 0 sig cv))
+		((not (or (number? cv) (node? cv))) (raise-type-error 't&h "number-or-node" 1 sig cv))
+		(else (operator TRACKNHOLD (list sig cv)))))
 
 ;; StartFunctionDoc-en
 ;; ramp start-number-or-node end-number-or-node duration-number-or-node 
@@ -614,8 +695,13 @@
 ;; (play-now (sine (ramp 220 440 2)))
 ;; EndFunctionDoc
 
-(define (ramp a b dur )
-  (operator RAMP (list a b dur))) 
+
+(define (ramp a b dur)
+	(cond
+		((not (or (number? a) (node? a))) (raise-type-error 'ramp "number-or-node" 0 a b dur))
+		((not (or (number? b) (node? b))) (raise-type-error 'ramp "number-or-node" 1 a b dur))
+		((not (or (number? dur) (node? dur))) (raise-type-error 'ramp "number-or-node" 2 a b dur))
+		(else (operator RAMP (list a b dur)))))
 
 ;; StartFunctionDoc-en
 ;; deltrig signal-node delay-time-number-or-node 
@@ -626,8 +712,11 @@
 ;; (play-now (sine (deltrig (ramp 330 1000 1) 2)))
 ;; EndFunctionDoc
 
-(define (deltrig sig del )
-  (operator DELTRIG (list sig del))) 
+(define (deltrig sig del)
+	(cond
+		((not  (node? sig)) (raise-type-error 'deltrig "node" 0 sig del))
+		((not (or (number? del) (node? del))) (raise-type-error 'deltrig "number-or-node" 1 sig del))
+		(else (operator DELTRIG (list sig del)))))
 
 ;; StartFunctionDoc-en
 ;; lfo-sine period-number-or-node 
@@ -638,9 +727,11 @@
 ;; Example:
 ;; (play-now (mooglp (saw 330) (lfo-sine 1) 0.3))
 ;; EndFunctionDoc
-
+  
 (define (lfo-sine per)
-  (operator LFOSIN (list per))) 
+ 	(if (not (or (number? per) (node? per)))
+    	(raise-type-error 'lfo-sine "number-or-node" per)
+    	(operator LFOSIN (list per))))
 
 ;; StartFunctionDoc-en
 ;; lfo-saw period-number-or-node 
@@ -653,7 +744,9 @@
 ;; EndFunctionDoc
 
 (define (lfo-saw per)
-  (operator LFOSAW (list per))) 
+ 	(if (not (or (number? per) (node? per)))
+    	(raise-type-error 'lfo-saw "number-or-node" per)
+    	(operator LFOSAW (list per))))
 
 ;; StartFunctionDoc-en
 ;; lfo-revsaw period-number-or-node 
@@ -666,7 +759,9 @@
 ;; EndFunctionDoc
 
 (define (lfo-revsaw per)
-  (operator LFOREVSAW (list per))) 
+ 	(if (not (or (number? per) (node? per)))
+    	(raise-type-error 'lfo-revsaw "number-or-node" per)
+    	(operator LFOREVSAW (list per))))
 
 ;; StartFunctionDoc-en
 ;; lfo-tri period-number-or-node 
@@ -679,7 +774,9 @@
 ;; EndFunctionDoc
 
 (define (lfo-tri per)
-  (operator LFOTRI (list per))) 
+ 	(if (not (or (number? per) (node? per)))
+    	(raise-type-error 'lfo-tri "number-or-node" per)
+    	(operator LFOTRI (list per))))
 
 ;; StartFunctionDoc-en
 ;; lfo-squ period-number-or-node 
@@ -692,7 +789,9 @@
 ;; EndFunctionDoc
 
 (define (lfo-squ per)
-  (operator LFOSQU (list per))) 
+ 	(if (not (or (number? per) (node? per)))
+    	(raise-type-error 'lfo-squ "number-or-node" per)
+    	(operator LFOSQU (list per))))
 
 ;; StartFunctionDoc-en
 ;; kas-filter input-node cutoff-number-or-node resonance-number-or-node shape-optional-number-or-node
@@ -703,9 +802,14 @@
 ;; Example:
 ;; (play-now (kas-filter (saw 330) 500 0.3))
 ;; EndFunctionDoc
-
+  
 (define (kas-filter in cut res [drive 0])
-  (operator KASF (list in cut res drive))) 
+	(cond
+		((not (node? in)) (raise-type-error 'kas-filter "node" 0 in cut res drive))
+		((not (or (number? cut) (node? cut))) (raise-type-error 'kas-filter "number-or-node" 1 in cut res drive))
+		((not (or (number? res) (node? res))) (raise-type-error 'kas-filter "number-or-node" 2 in cut res drive))
+		((not (or (number? drive) (node? drive))) (raise-type-error 'kas-filter "number-or-node" 3 in cut res drive))
+		(else (operator KASF (list in cut res drive)))))
 
 ;; StartFunctionDoc-en
 ;; scrub sample-name-string input-node 
@@ -715,9 +819,12 @@
 ;; Example:
 ;; (play-now (scrub "sample.wav" (lfo-sine 1)))
 ;; EndFunctionDoc
-
-(define (scrub filename in)
-  (operator SCRUB (list (get-sample-id filename) in))) 
+  
+(define (scrub filename freq)
+	(cond
+		((not (string? filename)) (raise-type-error 'scrub "string" 0 filename freq))
+		((not (or (number? freq) (node? freq))) (raise-type-error 'scrub "number-or-node" 1 filename freq))
+		(else (operator SCRUB (list (get-sample-id filename) freq)))))
 
 ;; StartFunctionDoc-en
 ;; play time node optional-pan
@@ -738,12 +845,16 @@
 ;; EndFunctionDoc
 
 (define (play time node (pan 0) (f '()))
-  (let ((time (time->timestamp time)))
-    (osc-send "/play" "iiif" (list (vector-ref time 0)
+	(cond
+		((not (number? time)) (raise-type-error 'play "number" 0 time node pan f))
+		((not (node? node)) (raise-type-error 'play "node" 1 time node pan f))
+		((not (number? pan)) (raise-type-error 'play "number" 2 time node pan f))
+  		(else (let ((time (time->timestamp time)))
+    			(osc-send "/play" "iiif" (list (vector-ref time 0)
                                    (vector-ref time 1)
                                    (node-id node) pan)))
-  (when (not (null? f))
-    (spawn-timed-task time f)))
+  				(when (not (null? f))
+    			(spawn-timed-task time f)))))
 
 
 ;; StartFunctionDoc-en
@@ -765,7 +876,10 @@
 ;; EndFunctionDoc
 
 (define (play-now node (pan 0))
-  (osc-send "/play" "iiif" (list 0 0 (node-id node) pan)))
+	(cond
+		((not (node? node)) (raise-type-error 'play "node" 1 play-now node pan))
+		((not (number? pan)) (raise-type-error 'play "number" 2 play-now node pan))
+  		(else (osc-send "/play" "iiif" (list 0 0 (node-id node) pan)))))
 
 ;------------------------------
 ; global controls
@@ -790,7 +904,9 @@
 ;; EndFunctionDoc
 
 (define (fluxa-debug v)
-  (osc-send "/debug" "i" (list v)))
+	(if (not (boolean? v))
+    	(raise-type-error 'fluxa-debug "boolean" v)
+		(osc-send "/debug" "i" (list v))))
 
 ;; StartFunctionDoc-en
 ;; volume amount-number
@@ -811,7 +927,9 @@
 ;; EndFunctionDoc
 
 (define (volume v)
-  (osc-send "/globalvolume" "f" (list v)))
+	(if (not (number? v))
+    	(raise-type-error 'volume "number" v)
+		(osc-send "/globalvolume" "f" (list v))))
 
 ;; StartFunctionDoc-en
 ;; pan pan-number
@@ -832,7 +950,9 @@
 ;; EndFunctionDoc
 
 (define (pan v)
-  (osc-send "/pan" "f" (list v)))
+	(if (not (number? v))
+    	(raise-type-error 'pan "number" v)
+		(osc-send "/pan" "f" (list v))))
 
 ;; StartFunctionDoc-en
 ;; max-synths number
@@ -859,7 +979,9 @@
 ;; EndFunctionDoc
 
 (define (max-synths s)
-  (osc-send "/maxsynths" "i" (list s)))
+	(if (not (exact-positive-integer? s))
+    	(raise-type-error 'max-synths "exact-positive-integer" s)
+		(osc-send "/maxsynths" "i" (list s))))
 
 ;; StartFunctionDoc-en
 ;; searchpath path-string
@@ -881,9 +1003,12 @@
 ;; EndFunctionDoc
 
 (define (searchpath path)
-  (unless (member path fluxa-searchpaths)
-	  (set! fluxa-searchpaths (cons path fluxa-searchpaths)))
-  (osc-send "/addsearchpath" "s" (list path)))
+	(if (not (string? path))
+    	(raise-type-error 'searchpath "string" path)
+    	(begin
+  			(unless (member path fluxa-searchpaths)
+	  			(set! fluxa-searchpaths (cons path fluxa-searchpaths)))
+  			(osc-send "/addsearchpath" "s" (list path)))))
 
 ;; StartFunctionDoc-en
 ;; eq bass-number middle-number high-number
@@ -905,7 +1030,11 @@
 ;; EndFunctionDoc
 
 (define (eq l m h)
-  (osc-send "/eq" "fff" (list l m h)))
+	(cond
+		((not (number? l)) (raise-type-error 'eq "number" 0 l m h))
+		((not (number? m)) (raise-type-error 'eq "number" 1 l m h))
+		((not (number? h)) (raise-type-error 'eq "number" 2 l m h))
+  		(else (osc-send "/eq" "fff" (list l m h)))))
 
 ;; StartFunctionDoc-en
 ;; comp attack-number release-number threshold-number slope-number
@@ -926,7 +1055,12 @@
 ;; EndFunctionDoc
 
 (define (comp a r t s)
-  (osc-send "/comp" "ffff" (list a r t s)))
+	(cond
+		((not (number? a)) (raise-type-error 'comp "number" 0 a r t s))
+		((not (number? r)) (raise-type-error 'comp "number" 1 a r t s))
+		((not (number? t)) (raise-type-error 'comp "number" 2 a r t s))
+		((not (number? s)) (raise-type-error 'comp "number" 3 a r t s))
+  		(else (osc-send "/comp" "ffff" (list a r t s)))))
 
 ;; StartFunctionDoc-en
 ;; note note-number
@@ -952,7 +1086,9 @@
 (define flx-scale '(1 1 1 1 1 1 1 1 1 1 1))
 
 (define (note n)
-  (list-ref scale-lut (modulo (inter flx-scale n) (length scale-lut))))
+	(if (not (number? n))
+    	(raise-type-error 'note "number" n)
+  		(list-ref scale-lut (modulo (inter flx-scale n) (length scale-lut)))))
 
 ;; StartFunctionDoc-en
 ;; reset
@@ -1082,7 +1218,10 @@
 ;; EndFunctionDoc
 
 (define (zmod clock n)
-  (zero? (modulo clock n)))
+	(cond
+		((not (integer? clock)) (raise-type-error 'zmod "integer" 0 clock n))
+		((not (integer? n)) (raise-type-error 'zmod "integer" 1 clock n))
+		(else (zero? (modulo clock n)))))
 
 ;; StartFunctionDoc-en
 ;; seq proc
@@ -1111,7 +1250,10 @@
 ;; EndFunctionDoc
 
 (define (seq p)
-  (set! proc p))
+	(cond
+		((not (procedure? p)) (raise-type-error 'seq "procedure" p))
+		((not (eq? (procedure-arity p) 2)) (error "seq function should take 2 arguments but takes" (procedure-arity p)))
+  		(else (set! proc p))))
 
 (define proc
   (lambda (time clock)
