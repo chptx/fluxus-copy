@@ -1159,7 +1159,7 @@
 ;;          (mooglp (saw (note nt)) cutoff 0.4))))
 ;;      clock
 ;;      (list 39 28 3)
-;;      (list 0.1 0.1 0.4 0.9))))
+;;      (list 0.1 0.1 0.4 0.9)) .15))
 ;; EndFunctionDoc
 
 ;; StartFunctionDoc-pt
@@ -1176,7 +1176,7 @@
 ;;          (mooglp (saw (note nt)) cutoff 0.4))))
 ;;      clock
 ;;      (list 39 28 3)
-;;      (list 0.1 0.1 0.4 0.9))))
+;;      (list 0.1 0.1 0.4 0.9)) .15))
 ;; EndFunctionDoc
 
 (define-syntax clock-map
@@ -1202,7 +1202,7 @@
 ;; Example:
 ;; (seq (lambda (time clock)
 ;;     (when (zmod clock 4) ; play the note every 4th beat
-;;         (play time (mul (adsr 0 0.1 0 0) (sine (note nt)))))))
+;;         (play time (mul (adsr 0 0.1 0 0) (sine 440)))) .15))
 ;; EndFunctionDoc
 
 ;; StartFunctionDoc-pt
@@ -1214,7 +1214,7 @@
 ;; Exemplo:
 ;; (seq (lambda (time clock)
 ;;     (when (zmod clock 4) ; play the note every 4th beat
-;;         (play time (mul (adsr 0 0.1 0 0) (sine (note nt)))))))
+;;         (play time (mul (adsr 0 0.1 0 0) (sine 440)))) .15))
 ;; EndFunctionDoc
 
 (define (zmod clock n)
@@ -1233,7 +1233,7 @@
 ;; Example:
 ;; (seq (lambda (time clock)
 ;;     (when (zmod clock 4) ; play the note every 4th beat
-;;         (play time (mul (adsr 0 0.1 0 0) (sine (note nt)))))))
+;;         (play time (mul (adsr 0 0.1 0 0) (sine 440)))) .15))
 ;; EndFunctionDoc
 
 ;; StartFunctionDoc-pt
@@ -1246,7 +1246,7 @@
 ;; Exemplo:
 ;; (seq (lambda (time clock)
 ;;     (when (zmod clock 4) ; play the note every 4th beat
-;;         (play time (mul (adsr 0 0.1 0 0) (sine (note nt)))))))
+;;         (play time (mul (adsr 0 0.1 0 0) (sine 440)))) .15))
 ;; EndFunctionDoc
 
 (define (seq p)
@@ -1310,7 +1310,11 @@
   (cond ((> (time-now) logical-time)
        ; todo: fall back on last thunk if there is an error
      (with-handlers ([(lambda (x) #t) fluxa-error-handler])
-           (set! tempo (proc (+ logical-time (* bpb tempo)) clock)))
+     	(let ((temp (proc (+ logical-time (* bpb tempo)) clock)))
+     		(cond 
+     			((not (number? temp)) (error "seq function should return a number!"))
+     			((negative? temp) (error "seq function should not return a negative number!"))
+           		(else (set! tempo temp)))))
          (set! logical-time (+ logical-time tempo))
          (set! clock (+ clock 1))
          (set! sync-clock (+ sync-clock 1))))
