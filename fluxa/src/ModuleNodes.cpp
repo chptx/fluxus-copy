@@ -349,8 +349,9 @@ void FilterNode::Process(unsigned int bufsize)
 		
 		if (GetChild(1)->IsTerminal())
 		{
-			float c=GetChild(1)->GetValue();			
-			if (c>=0 && c<1) m_Filter.SetCutoff(c);
+			float c=GetChild(1)->GetValue();
+			if (m_Type == FORMANT) m_Filter.SetCutoff(c);
+			else if (c>=0 && c<1) m_Filter.SetCutoff(c);
 			
 			m_Filter.Process(bufsize, GetInput(0), m_Output);
 		}

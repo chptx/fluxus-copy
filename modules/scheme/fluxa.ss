@@ -475,12 +475,12 @@
 		(else (operator MOOGHP (list in cutoff resonance)))))
 
 ;; StartFunctionDoc-en
-;; formant signal-node cutoff-number-or-node resonance-number-or-node
+;; formant signal-node vowel-number-or-node 
 ;; Returns: node-id-number
 ;; Description:
-;; Creates a formant filter node
+;; Creates a formant filter node, vowel selection ranges from 0 to 4
 ;; Example:
-;; (play-now (mul (formant (squ 440) 0.1 0.4) (adsr 0.1 0.1 0 0)))
+;; (play-now (mul (formant (squ 440) 3) (adsr 0.1 0.1 0 0)))
 ;; EndFunctionDoc
 
 ;; StartFunctionDoc-pt
@@ -493,12 +493,11 @@
 ;; EndFunctionDoc
 
   
-(define (formant in cutoff resonance)
+(define (formant in vowel)
 	(cond
-		((not (node? in)) (raise-type-error 'formant "node" 0 in cutoff resonance))
-		((not (or (number? cutoff) (node? cutoff))) (raise-type-error 'formant "number-or-node" 1 in cutoff resonance))
-		((not (or (number? resonance) (node? resonance))) (raise-type-error 'formant "number-or-node" 2 in cutoff resonance))
-		(else (operator FORMANT (list in cutoff resonance)))))
+		((not (node? in)) (raise-type-error 'formant "node" 0 in vowel))
+		((not (or (number? vowel) (node? vowel))) (raise-type-error 'formant "number-or-node" 1 in vowel))
+		(else (operator FORMANT (list in vowel 0)))))
 
 ;; StartFunctionDoc-en
 ;; sample sample-filename-string frequency-number-or-node

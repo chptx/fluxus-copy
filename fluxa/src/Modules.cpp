@@ -872,30 +872,37 @@ void FormantFilter::Process(unsigned int BufSize, Sample &In, Sample *CutoffCV, 
 		}
 
 		float vowel=m_Vowel;
-		if (CutoffCV!=NULL) vowel+=(*CutoffCV)[n];
+		if (CutoffCV!=NULL) vowel=(*CutoffCV)[n];
 
 		// mix between vowel sounds
-		if (vowel<1) 
+		if (vowel<=1) 
 		{
-			out=Linear(0,1,vowel,o[1],o[0]); 
+			//out=Linear(0,1,vowel,o[1],o[0]);
+			out = (o[1] * vowel) + (o[0] * (1 - vowel));
 		}	
 		else 
-		if (vowel>1 && vowel<2) 
+		if (vowel>1 && vowel<=2) 
 		{
-			out=Linear(0,1,vowel-1.0f,o[2],o[1]);
+			//out=Linear(0,1,vowel-1.0f,o[2],o[1]);
+			vowel = vowel - 1;
+			out = (o[2] * vowel) + (o[1] * (1 - vowel));
 		}	
 		else 
-		if (vowel>2 && vowel<3) 
+		if (vowel>2 && vowel<=3) 
 		{
-			out=Linear(0,1,m_Vowel-2.0f,o[3],o[2]);
+			//out=Linear(0,1,m_Vowel-2.0f,o[3],o[2]);
+			vowel = vowel - 2;
+			out = (o[3] * vowel) + (o[2] * (1 - vowel));
 		}	
 		else 
-		if (vowel>3 && vowel<4) 
+		if (vowel>3 && vowel<=4) 
 		{
-			out=Linear(0,1,vowel-3.0f,o[4],o[3]);
+			//out=Linear(0,1,vowel-3.0f,o[4],o[3]);
+			vowel = vowel - 3;
+			out = (o[4] * vowel) + (o[3] * (1 - vowel));
 		}	
 		else 
-		if (vowel==4) 
+		//if (vowel==4) 
 		{
 			out=o[4];
 		}	
