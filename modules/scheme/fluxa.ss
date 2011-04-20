@@ -848,6 +848,7 @@
 		((not (number? time)) (raise-type-error 'play "number" 0 time node pan f))
 		((not (node? node)) (raise-type-error 'play "node" 1 time node pan f))
 		((not (number? pan)) (raise-type-error 'play "number" 2 time node pan f))
+		((not (or (null? f) (procedure? f))) (raise-type-error 'play "procedure-or-null" 3 time node pan f))
   		(else (let ((time (time->timestamp time)))
     			(osc-send "/play" "iiif" (list (vector-ref time 0)
                                    (vector-ref time 1)
@@ -876,8 +877,8 @@
 
 (define (play-now node (pan 0))
 	(cond
-		((not (node? node)) (raise-type-error 'play "node" 1 play-now node pan))
-		((not (number? pan)) (raise-type-error 'play "number" 2 play-now node pan))
+		((not (node? node)) (raise-type-error 'play-now "node" 1 play-now node pan))
+		((not (number? pan)) (raise-type-error 'play-now "number" 2 play-now node pan))
   		(else (osc-send "/play" "iiif" (list 0 0 (node-id node) pan)))))
 
 ;------------------------------

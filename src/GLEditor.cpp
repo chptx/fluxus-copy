@@ -760,6 +760,14 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				m_Selection=false;
 				m_Position+=m_CopyBuffer.size();
 			break;
+			case 20: //"t" for "take", or something? not many keys left...
+				if (m_ParenthesesHighlight[0]<m_ParenthesesHighlight[1] )
+				{
+					m_HighlightStart = m_ParenthesesHighlight[0];
+					m_HighlightEnd = 1 + m_ParenthesesHighlight[1];
+					m_Selection=true;
+				}
+			break;
 			/*case GLEDITOR_PLUS: // zoom in
 				m_Scale*=1.1f;
 			break;
@@ -877,7 +885,7 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 		m_Selection=true;
 	}
 
-	if (key==0 && special!=GLUT_KEY_F5 && m_ShiftState && !mod&GLUT_ACTIVE_SHIFT)
+	if (key==0 && special!=GLUT_KEY_F5 && ( m_ShiftState || m_Selection )  && !mod&GLUT_ACTIVE_SHIFT)
 	{
 		m_ShiftState=false;
 		m_Selection=false;
