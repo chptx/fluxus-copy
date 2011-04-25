@@ -17,6 +17,7 @@
 #include "Types.h"
 #include "Sample.h"
 #include <stdlib.h>
+#include <math.h>
 
 #ifndef MODULES
 #define MODULES
@@ -28,7 +29,8 @@ static const int NUM_TABLES = 9;
 static const int DEFAULT_TABLE_LEN = 1024;
 static const int FILTER_GRANULARITY = 10;
 static const float PI=3.141592654;
-static const float RAD=(PI/180.0)*360.0;
+static const float TWOPI=PI * 2;
+
 
 float RandRange(float L, float H);
 void Crush(Sample &buf, float freq, float bits);
@@ -61,7 +63,9 @@ public:
 	enum {SINE,SQUARE,SAW,REVSAW,TRIANGLE,PULSE1,PULSE2,NOISE,PINKNOISE};
 
 	virtual void Process(unsigned int BufSize, Sample &In);
+	virtual void ProcessLfo(unsigned int BufSize, Sample &In);
 	virtual void ProcessFM(unsigned int BufSize, Sample &In, const Sample &Pitch);
+	virtual void ProcessLfoFM(unsigned int BufSize, Sample &In, const Sample &Period);
 	void SimpleProcess(unsigned int BufSize, Sample &In);
 	virtual void Trigger(float time, float pitch, float slidepitch, float vol);
 	virtual void Reset();
@@ -88,7 +92,9 @@ private:
 	float m_SlideLength;
 	float m_TimePerSample;
 	float m_TablePerSample;
-		
+	float m_Time;
+	float m_SampleTime;
+	
 	static Sample m_Table[NUM_TABLES];
 	static unsigned int m_TableLength;
 };
@@ -132,10 +138,10 @@ public:
 	virtual void Trigger(float time, float pitch, float vol);
 	virtual void Reset();
 
-	void SetAttack(float s)  { m_Attack=s; }
-	void SetDecay(float s)   { m_Decay=s; }
+	void SetAttack(float s)  { m_Attack=fabs(s); }
+	void SetDecay(float s)   { m_Decay=fabs(s); }
 	void SetSustain(float s) { m_Sustain=s; }
-	void SetRelease(float s) { m_Release=s; }
+	void SetRelease(float s) { m_Release=fabs(s); }
 	void SetVolume(float s)  { m_Volume=s; }
 
 protected:
@@ -150,6 +156,31 @@ protected:
 	float m_Current;
 
 };
+
+class Ramp : public Module
+{
+public:
+	Ramp(int SampleRate);
+	virtual ~Ramp() {}
+	
+	virtual void Process(unsigned int BufSize, Sample &CV);
+	virtual void Trigger(float time, float pitch, float vol);
+	virtual void Reset();
+
+	void SetStartVal(float s)	{ m_Start=s; }
+	void SetEndVal(float s)		{ m_End=s; }
+	void SetDur(float s)		{ m_Dur=fabs(s); }
+	
+protected:
+	bool   m_Trigger;
+	float  m_t;
+	float  m_Start;
+	float  m_End;
+	float  m_Delta;
+	float  m_Dur;	
+	float  m_SampleTime;
+};
+
 
 class SimpleEnvelope : public Module
 {
@@ -369,6 +400,29 @@ protected:
 	unsigned int m_Position;
 	Sample m_Buffer;
     MoogFilter m_Filter;
+};
+
+class KasF : public Module
+{
+public:
+	KasF(int SampleRate);
+	virtual ~KasF() {}
+	
+	virtual void Process(unsigned int BufSize, Sample &In, Sample &CutoffCV,	Sample &ResCV,	Sample &DriveCV,	Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, Sample &CutoffCV,	Sample &ResCV,	float DriveCV, 		Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, Sample &CutoffCV,	float ResCV,	Sample &DriveCV, 	Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, Sample &CutoffCV,	float ResCV,	float DriveCV, 		Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, float CutoffCV, 		Sample &ResCV,	Sample &DriveCV, 	Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, float CutoffCV, 		Sample &ResCV,	float DriveCV, 		Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, float CutoffCV, 		float ResCV,	Sample &DriveCV, 	Sample &Out);
+	virtual void Process(unsigned int BufSize, Sample &In, float CutoffCV, 		float ResCV,	float DriveCV,	 	Sample &Out);
+	
+	virtual void Trigger(float time);
+	virtual void Reset();
+
+protected:
+	float m_StoreA, m_StoreB, m_Phase, m_PhasePerSample, m_LastIn;
+	
 };
 
 

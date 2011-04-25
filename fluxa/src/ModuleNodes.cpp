@@ -60,6 +60,49 @@ void OscNode::Process(unsigned int bufsize)
 	}
 }
 
+//like OscNode, except;
+//output is in the 0-1 range,
+//these only start running at the trigger time 
+//and the frequency is set using the duration of the cycle
+LfoNode::LfoNode(unsigned int Shape, unsigned int SampleRate):
+GraphNode(1),
+m_WaveTable(SampleRate),
+m_Shape(Shape)
+{
+	m_WaveTable.SetType(m_Shape);
+}
+
+void LfoNode::Trigger(float time)
+{
+	TriggerChildren(time);
+
+	float period=1;
+	if (ChildExists(0) && GetChild(0)->IsTerminal()) 
+	{
+		period=fabs( GetChild(0)->GetValue() );
+	}
+	m_WaveTable.Trigger(time, 1.0f / period, 1.0f / period, 1);
+}
+
+void LfoNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	ProcessChildren(bufsize);
+	
+	if (ChildExists(0) && !GetChild(0)->IsTerminal())
+	{
+		m_WaveTable.ProcessLfoFM(bufsize, m_Output, GetInput(0));
+	}
+	else
+	{
+		m_WaveTable.ProcessLfo(bufsize, m_Output);
+	}
+}
+
+
 ADSRNode::ADSRNode(unsigned int SampleRate):
 GraphNode(4),
 m_Envelope(SampleRate)
@@ -88,6 +131,35 @@ void ADSRNode::Process(unsigned int bufsize)
 	ProcessChildren(bufsize);
 	m_Envelope.Process(bufsize, m_Output);
 }
+
+RampNode::RampNode(unsigned int SampleRate):
+GraphNode(3),
+m_Ramp(SampleRate)
+{
+}
+
+void RampNode::Trigger(float time)
+{
+	TriggerChildren(time);
+	
+	if (ChildExists(0)) m_Ramp.SetStartVal(GetChild(0)->GetCVValue());
+	if (ChildExists(1)) m_Ramp.SetEndVal(GetChild(1)->GetCVValue());
+	if (ChildExists(2)) m_Ramp.SetDur(GetChild(2)->GetCVValue());
+	
+	m_Ramp.Trigger(time, 0, 1);
+}
+
+void RampNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	
+	ProcessChildren(bufsize);
+	m_Ramp.Process(bufsize, m_Output);
+}
+
 
 MathNode::MathNode(Type t):
 GraphNode(2),
@@ -277,8 +349,9 @@ void FilterNode::Process(unsigned int bufsize)
 		
 		if (GetChild(1)->IsTerminal())
 		{
-			float c=GetChild(1)->GetValue();			
-			if (c>=0 && c<1) m_Filter.SetCutoff(c);
+			float c=GetChild(1)->GetValue();
+			if (m_Type == FORMANT) m_Filter.SetCutoff(c);
+			else if (c>=0 && c<1) m_Filter.SetCutoff(c);
 			
 			m_Filter.Process(bufsize, GetInput(0), m_Output);
 		}
@@ -321,6 +394,34 @@ void SampleNode::Process(unsigned int bufsize)
 	m_Output.Zero();
 	m_Sampler.Process(bufsize, m_Output, m_Temp);
 }
+
+ScrubNode::ScrubNode(unsigned int samplerate):
+GraphNode(2),
+m_Scrubber(samplerate)
+{
+}
+
+void ScrubNode::Trigger(float time)
+{
+	TriggerChildren(time);
+	m_Scrubber.SetSampleId( (int)GetChild(0)->GetCVValue());
+}
+
+void ScrubNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	
+	ProcessChildren(bufsize);
+	m_Output.Zero();
+	if (ChildExists(1) && !GetChild(1)->IsTerminal())
+	{
+		m_Scrubber.Process( bufsize, m_Output, GetInput(1));
+	}
+}
+
 
 EffectNode::EffectNode(Type type, unsigned int samplerate):
 GraphNode(3),
@@ -466,9 +567,8 @@ void XFadeNode::Process(unsigned int bufsize)
 					float v0 = GetChild(0)->GetValue();
 					float v1 = GetChild(1)->GetValue();
 					float mix = GetChild(2)->GetValue();
-					if (mix < -1) mix = -1;
+					if (mix < 0) mix = 0;
 					else if (mix > 1) mix = 1;
-					mix = (0.5 + (mix * 0.5));
 					value = (v0 * (1 - mix)) + (v1 * mix);
 			
 					for (unsigned int n=0; n<bufsize; n++) m_Output[n]=value;
@@ -481,9 +581,8 @@ void XFadeNode::Process(unsigned int bufsize)
 					for (unsigned int n=0; n<bufsize; n++)
 					{
 						float mix = GetChild(2)->GetOutput()[n];	
-						if (mix < -1) mix = -1;
+						if (mix < 0) mix = 0;
 						else if (mix > 1) mix = 1;
-						mix = (0.5 + (mix * 0.5));
 						
 						m_Output[n]=(v0 * (1 - mix)) + (v1 * mix);
 					}
@@ -495,14 +594,14 @@ void XFadeNode::Process(unsigned int bufsize)
 				{
 					float v0 = GetChild(0)->GetValue();
 					float mix = GetChild(2)->GetValue();
-					if (mix < -1) mix = -1;
+					if (mix < 0) mix = 0;
 					else if (mix > 1) mix = 1;
-					mix = (0.5 + (mix * 0.5));
+					float oneminmix = (1 - mix);
 				
 					for (unsigned int n=0; n<bufsize; n++)
 					{
 						
-						m_Output[n]=(v0 * (1 - mix)) + (GetChild(1)->GetOutput()[n] * mix);
+						m_Output[n]=(v0 * oneminmix) + (GetChild(1)->GetOutput()[n] * mix);
 					}
 				}
 				else
@@ -512,9 +611,8 @@ void XFadeNode::Process(unsigned int bufsize)
 					for (unsigned int n=0; n<bufsize; n++)
 					{
 						float mix = GetChild(2)->GetOutput()[n];
-						if (mix < -1) mix = -1;
+						if (mix < 0) mix = 0;
 						else if (mix > 1) mix = 1;
-						mix = (0.5 + (mix * 0.5));
 						
 						m_Output[n]=(v0 * (1 - mix)) + (GetChild(1)->GetOutput()[n] * mix);
 					}
@@ -529,14 +627,14 @@ void XFadeNode::Process(unsigned int bufsize)
 				{
 					float v1 = GetChild(1)->GetValue();
 					float mix = GetChild(2)->GetValue();
-					if (mix < -1) mix = -1;
+					if (mix < 0) mix = 0;
 					else if (mix > 1) mix = 1;
-					mix = (0.5 + (mix * 0.5));
+					float oneminmix = (1 - mix);
 					
 					for (unsigned int n=0; n<bufsize; n++)
 					{
 						
-						m_Output[n]=(GetChild(0)->GetOutput()[n] * (1 - mix)) + (v1 * mix);
+						m_Output[n]=(GetChild(0)->GetOutput()[n] * oneminmix) + (v1 * mix);
 					}
 				}
 				else
@@ -546,9 +644,8 @@ void XFadeNode::Process(unsigned int bufsize)
 					for (unsigned int n=0; n<bufsize; n++)
 					{
 						float mix = GetChild(2)->GetOutput()[n];
-						if (mix < -1) mix = -1;
+						if (mix < 0) mix = 0;
 						else if (mix > 1) mix = 1;
-						mix = (0.5 + (mix * 0.5));
 						m_Output[n]=(GetChild(0)->GetOutput()[n] * (1 - mix)) + (v1 * mix);
 					}
 				}
@@ -558,12 +655,12 @@ void XFadeNode::Process(unsigned int bufsize)
 				if (GetChild(2)->IsTerminal())
 				{
 					float mix = GetChild(2)->GetValue();
-					if (mix < -1) mix = -1;
+					if (mix < 0) mix = 0;
 					else if (mix > 1) mix = 1;
-					mix = (0.5 + (mix * 0.5));
+					float oneminmix = (1 - mix);
 					for (unsigned int n=0; n<bufsize; n++)
 					{
-						m_Output[n]=(GetChild(0)->GetOutput()[n] * (1 - mix)) + (GetChild(1)->GetOutput()[n] * mix);
+						m_Output[n]=(GetChild(0)->GetOutput()[n] * oneminmix) + (GetChild(1)->GetOutput()[n] * mix);
 					}
 				}
 				else
@@ -571,9 +668,8 @@ void XFadeNode::Process(unsigned int bufsize)
 					for (unsigned int n=0; n<bufsize; n++)
 					{
 						float mix = GetChild(2)->GetOutput()[n];
-						if (mix < -1) mix = -1;
+						if (mix < 0) mix = 0;
 						else if (mix > 1) mix = 1;
-						mix = (0.5 + (mix * 0.5));
 						m_Output[n]=(GetChild(0)->GetOutput()[n] * (1 - mix)) + (GetChild(1)->GetOutput()[n] * mix);
 					}
 				}
@@ -677,6 +773,104 @@ void HoldNode::Process(unsigned int bufsize)
 					break;
 				}
 			}
+		}
+	}
+}
+
+DelTrigNode::DelTrigNode():
+GraphNode(2)
+{
+}
+
+void DelTrigNode::Trigger(float time)
+{
+	TriggerChildren(time - fabs (GetChild(1)->GetCVValue()));
+}
+
+void DelTrigNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	
+	ProcessChildren(bufsize);
+	
+	if ( ChildExists(0) && ChildExists(1))
+	{
+		if ( GetChild(0)->IsTerminal() )
+		{
+			float temp = GetChild(0)->GetValue();
+			for (unsigned int n=0; n<bufsize; n++)
+			{
+				m_Output[n]=temp;
+			}
+		}
+		else
+		{
+		for (unsigned int n=0; n<bufsize; n++)
+			{
+				m_Output[n]=GetChild(0)->GetOutput()[n];
+			}
+		}
+	}
+}
+
+//for the method to this madness see the relevant section of Modules.cpp
+KasFiltNode::KasFiltNode(unsigned int SampleRate):
+GraphNode(4),
+m_KasF(SampleRate)
+{
+}
+
+void KasFiltNode::Trigger(float time)
+{
+	TriggerChildren(time);
+	m_KasF.Trigger(time);
+}
+
+void KasFiltNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	
+	ProcessChildren(bufsize);
+	//rather massive function overloading here, but I'd rather do this than skimp on live modulation or on cpu usage.
+	if ( ChildExists(0) && ChildExists(1) && ChildExists(2) && ChildExists(3))
+	{
+		if (!GetChild(0)->IsTerminal() && !GetChild(1)->IsTerminal() && !GetChild(2)->IsTerminal() && GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetInput(1), GetInput(2), GetChild(3)->GetValue(), m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && GetChild(1)->IsTerminal() && !GetChild(2)->IsTerminal() && GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetChild(1)->GetValue(), GetInput(2), GetChild(3)->GetValue(), m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && !GetChild(1)->IsTerminal() && GetChild(2)->IsTerminal() && GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetInput(1),  GetChild(2)->GetValue(), GetChild(3)->GetValue(), m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && GetChild(1)->IsTerminal() && GetChild(2)->IsTerminal() && GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetChild(1)->GetValue(),  GetChild(2)->GetValue(), GetChild(3)->GetValue(),  m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && !GetChild(1)->IsTerminal() && !GetChild(2)->IsTerminal() && !GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetInput(1), GetInput(2), GetInput(3), m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && GetChild(1)->IsTerminal() && !GetChild(2)->IsTerminal() && !GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetChild(1)->GetValue(), GetInput(2), GetInput(3), m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && !GetChild(1)->IsTerminal() && GetChild(2)->IsTerminal() && !GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetInput(1),  GetChild(2)->GetValue(), GetInput(3), m_Output);
+		}
+		else if (!GetChild(0)->IsTerminal() && GetChild(1)->IsTerminal() && GetChild(2)->IsTerminal() && !GetChild(3)->IsTerminal())
+		{
+			m_KasF.Process(bufsize, GetInput(0), GetChild(1)->GetValue(),  GetChild(2)->GetValue(), GetInput(3),  m_Output);
 		}
 	}
 }

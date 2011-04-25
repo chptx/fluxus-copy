@@ -48,12 +48,12 @@ void Crush(Sample &buf, float freq, float bits)
 void Distort(Sample &buf, float amount)
 {
 	if (amount>=0.99) amount = 0.99;
-	
+	amount = fabs(amount);
 	float k=2*amount/(1-amount);
 	
 	for(unsigned int i=0; i<buf.GetLength(); i++)
 	{
-		buf[i]=((1+k)*buf[i]/(1+k*fabs(buf[i])))*(1-amount);
+		buf[i]=((1+k)*buf[i]/(1+k*fabs(buf[i])));
 	}
 }
 
@@ -66,7 +66,7 @@ void MovingDistort(Sample &buf, const Sample &amount)
         if (a>0.99) a = 0.99;
 		float k=2*a/(1-a);
 		
-        buf[i]=((1+k)*buf[i]/(1+k*fabs(buf[i])))*(1-a);
+        buf[i]=((1+k)*buf[i]/(1+k*fabs(buf[i])));
 	}
 }
 
@@ -128,13 +128,13 @@ void WaveTable::WriteWaves()
 		m_Table[n].Allocate(m_TableLength);
 	}
 	
-	float RadCycle = (M_PI/180)*360;
+	
 	float Pos=0; 
 
 	for (unsigned int n=0; n<m_TableLength; n++)
 	{
 		if (n==0) Pos=0;
-		else Pos=(n/(float)m_TableLength)*RadCycle;
+		else Pos=(n/(float)m_TableLength)*TWOPI;
 		m_Table[NOISE].Set(n,RandRange(-1,1));		
 	}
 	
@@ -157,7 +157,7 @@ void WaveTable::WriteWaves()
 	for (unsigned int n=0; n<m_TableLength; n++)
 	{
 		if (n==0) Pos=0;
-		else Pos=(n/(float)m_TableLength)*RadCycle;
+		else Pos=(n/(float)m_TableLength)*TWOPI;
 		m_Table[SINE].Set(n,sin(Pos));		
 	}
 
@@ -206,6 +206,7 @@ void WaveTable::Trigger(float time, float pitch, float slidepitch, float vol)
 	if (m_SlideLength==0) m_Pitch=pitch; 
 	m_Volume=vol*1.0f;
 	m_SlideTime=0;
+	m_Time=time;
 }
 
 void WaveTable::Process(unsigned int BufSize, Sample &In)
@@ -256,6 +257,72 @@ void WaveTable::Process(unsigned int BufSize, Sample &In)
 	}
 }
 
+void WaveTable::ProcessLfo(unsigned int BufSize, Sample &In)
+{
+	if (m_SlideLength>0)
+	{
+		float Incr;
+		float Freq;
+		float StartFreq=m_Pitch;
+		StartFreq*=m_FineFreq;
+		if (m_Octave>0) StartFreq*=1<<(m_Octave);
+		if (m_Octave<0) StartFreq/=1<<(-m_Octave);
+
+		float SlideFreq=m_TargetPitch;
+		SlideFreq*=m_FineFreq;
+		if (m_Octave>0) SlideFreq*=1<<(m_Octave);
+		if (m_Octave<0) SlideFreq/=1<<(-m_Octave);
+
+		for (unsigned int n=0; n<BufSize; n++)
+		{	
+			float t=m_SlideTime/m_SlideLength;
+			if (t>1) Freq=SlideFreq;
+			else Freq=(1-t)*StartFreq+t*SlideFreq;
+			Incr = Freq*m_TablePerSample;
+			
+			if (m_Time<0) //wait for trigger time to accomplish sync
+			{
+				m_Time+=m_TimePerSample;
+				In[n]= 0.5 + (0.5*m_Table[(int)m_Type][m_CyclePos]);
+			}
+			else
+			{
+				m_CyclePos+=Incr;
+				if (m_CyclePos<0) m_CyclePos=m_TableLength-m_CyclePos;
+				m_CyclePos=fmod(m_CyclePos,m_TableLength-1);	
+				In[n]= 0.5f + (0.5f * m_Table[(int)m_Type][m_CyclePos]);	
+				m_SlideTime+=m_TimePerSample;
+			}
+		}
+	}
+	else
+	{
+		float Incr;
+		float Freq=m_Pitch;
+		Freq*=m_FineFreq;
+		if (m_Octave>0) Freq*=1<<(m_Octave);
+		if (m_Octave<0) Freq/=1<<(-m_Octave);
+		Incr = Freq*m_TablePerSample;
+
+		for (unsigned int n=0; n<BufSize; n++)
+		{	
+			if (m_Time<0) //wait for trigger time to accomplish sync
+			{
+				m_Time+=m_TimePerSample;
+				In[n]= 0.5 + (0.5*m_Table[(int)m_Type][m_CyclePos]);
+			}
+			else
+			{
+				m_CyclePos+=Incr;
+				if (m_CyclePos<0) m_CyclePos=m_TableLength-m_CyclePos;
+				m_CyclePos=fmod(m_CyclePos,m_TableLength-1);
+				In[n]= 0.5f + (0.5f * m_Table[(int)m_Type][m_CyclePos]);
+			}
+		}
+	}
+}
+
+
 void WaveTable::ProcessFM(unsigned int BufSize, Sample &In, const Sample &Pitch)
 {
 	for (unsigned int n=0; n<BufSize; n++)
@@ -269,6 +336,30 @@ void WaveTable::ProcessFM(unsigned int BufSize, Sample &In, const Sample &Pitch)
 		}
 	}
 }
+
+void WaveTable::ProcessLfoFM(unsigned int BufSize, Sample &In, const Sample &Period)
+{
+	for (unsigned int n=0; n<BufSize; n++)
+	{			
+		if (m_Time<0) //wait for trigger time to accomplish sync
+		{
+			m_Time+=m_TimePerSample;
+			In[n]= 0.5 + (0.5*m_Table[(int)m_Type][m_CyclePos]);
+		}
+		else
+		{
+			if ( Period[n] > 0)
+			{
+				float pitch = 1.0f / Period[n];
+				m_CyclePos+=pitch*m_TablePerSample;
+				if (m_CyclePos<0) m_CyclePos=m_TableLength-m_CyclePos;
+				m_CyclePos=fmod(m_CyclePos,m_TableLength-1);
+			}
+			In[n]= 0.5f + (0.5f * m_Table[(int)m_Type][m_CyclePos]);
+		}
+	}
+}
+
 
 void WaveTable::SimpleProcess(unsigned int BufSize, Sample &In)
 {
@@ -307,13 +398,12 @@ void SimpleWave::Reset()
 
 void SimpleWave::WriteWaves()
 {
-	float RadCycle = (M_PI/180)*360;
 	float Pos=0;
 
 	for (unsigned int n=0; n<m_TableLength; n++)
 	{
 		if (n==0) Pos=0;
-		else Pos=(n/(float)m_TableLength)*RadCycle;
+		else Pos=(n/(float)m_TableLength)*TWOPI;
 		m_Table.Set(n,sin(Pos));		
 	}
 }
@@ -486,6 +576,67 @@ void Envelope::Trigger(float time, float pitch, float vol)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+
+Ramp::Ramp(int SampleRate) : 
+Module(SampleRate)
+{
+	m_SampleTime=1.0/(float)m_SampleRate;
+	Reset();
+}
+	
+void Ramp::Reset()
+{
+	m_Trigger = false;
+	m_Start=0.0f;
+	m_End=0.0f;
+	m_Delta=0.0f;
+	m_Dur=5.0f;
+	m_t=-1000.0f;
+}
+	
+void Ramp::Process(unsigned int BufSize, Sample &CV) 
+{	
+	if (m_Trigger)
+	{
+		for (unsigned int n=0; n<BufSize; n++)
+		{	
+			// if we are in the delay (before really being triggered)		
+			if (m_t<0) 
+			{		
+				CV[n]=m_Start;
+				m_t+=m_SampleTime;
+			}
+			//if we are ramping
+			else if (m_t<m_Dur)
+			{
+				CV[n]= ((m_t / m_Dur) * m_Delta) + m_Start;
+				m_t+=m_SampleTime;
+			}
+			//after the change
+			else
+			{
+				CV[n] = m_End;
+			}
+		} 
+	}
+	else
+	{
+	for (unsigned int n=0; n<BufSize; n++)
+		{
+		CV[n]=m_Start;
+		}
+	}
+}
+
+void Ramp::Trigger(float time, float pitch, float vol) 
+{
+	m_Delta = m_End - m_Start;
+	m_Trigger = true;
+	m_t=time; 
+}
+
+///////////////////////////////////////////////////////////////////////////
+
 
 SimpleEnvelope::SimpleEnvelope(int SampleRate) : 
 Module(SampleRate)
@@ -721,30 +872,37 @@ void FormantFilter::Process(unsigned int BufSize, Sample &In, Sample *CutoffCV, 
 		}
 
 		float vowel=m_Vowel;
-		if (CutoffCV!=NULL) vowel+=(*CutoffCV)[n];
+		if (CutoffCV!=NULL) vowel=(*CutoffCV)[n];
 
 		// mix between vowel sounds
-		if (vowel<1) 
+		if (vowel<=1) 
 		{
-			out=Linear(0,1,vowel,o[1],o[0]); 
+			//out=Linear(0,1,vowel,o[1],o[0]);
+			out = (o[1] * vowel) + (o[0] * (1 - vowel));
 		}	
 		else 
-		if (vowel>1 && vowel<2) 
+		if (vowel>1 && vowel<=2) 
 		{
-			out=Linear(0,1,vowel-1.0f,o[2],o[1]);
+			//out=Linear(0,1,vowel-1.0f,o[2],o[1]);
+			vowel = vowel - 1;
+			out = (o[2] * vowel) + (o[1] * (1 - vowel));
 		}	
 		else 
-		if (vowel>2 && vowel<3) 
+		if (vowel>2 && vowel<=3) 
 		{
-			out=Linear(0,1,m_Vowel-2.0f,o[3],o[2]);
+			//out=Linear(0,1,m_Vowel-2.0f,o[3],o[2]);
+			vowel = vowel - 2;
+			out = (o[3] * vowel) + (o[2] * (1 - vowel));
 		}	
 		else 
-		if (vowel>3 && vowel<4) 
+		if (vowel>3 && vowel<=4) 
 		{
-			out=Linear(0,1,vowel-3.0f,o[4],o[3]);
+			//out=Linear(0,1,vowel-3.0f,o[4],o[3]);
+			vowel = vowel - 3;
+			out = (o[4] * vowel) + (o[3] * (1 - vowel));
 		}	
 		else 
-		if (vowel==4) 
+		//if (vowel==4) 
 		{
 			out=o[4];
 		}	
@@ -1029,3 +1187,304 @@ void KS::Process(unsigned int BufSize, Sample &Out)
 	}
 }
 
+//////////////////////////////////////
+//"kas-filter";
+//Undersampling-based lowpass filter, design&implementation by Kassen, signal.automatique@gmail.com
+//based on two sample&holds with a cosine crossfading between them. Each S&H samples at the moment it's "faded out"
+//the frequency of the crossfading sets the "cutoff".
+//linear interpolation is used on the input signal to compensate for the S&H's being quantised to the sample rate
+//Negative feedback is used for "resonance". 
+//In addition to the traditional modulation inputs waveshaping of crossfading signal is provided.
+//Notice that this design causes aliassing and can cause some "beating" between the cutoff frequency and the input signal
+//These are deemed fun things to play with.
+
+KasF::KasF(int SampleRate) :
+Module(SampleRate),
+m_StoreA(0),
+m_StoreB(0),
+m_Phase(0),
+m_LastIn(0)
+{
+	m_PhasePerSample=PI/(float)m_SampleRate;
+}
+
+void KasF::Reset()
+{
+m_StoreA=0;
+m_StoreB=0;
+m_Phase=0;
+m_LastIn=0;
+}
+
+void KasF::Trigger(float time)
+{
+m_StoreA=0;
+m_StoreB=0;
+m_Phase=0;
+m_LastIn=0;
+}
+
+void KasF::Process(unsigned int BufSize, Sample &In, Sample &CutoffCV, Sample &ResCV, Sample &DriveCV, Sample &Out)
+{
+
+	for (unsigned int n=0; n<BufSize; n++)
+	{
+		float LastPhase=m_Phase;
+		float PhaseInc=m_PhasePerSample * fabs(CutoffCV[n]);
+		m_Phase+= PhaseInc;
+		float FeedBack = -1 * fabs(ResCV[n]);
+		if (FeedBack < -0.95) FeedBack = -0.95;
+		float drive = fabs (DriveCV[n]);
+		if (drive > 1) drive = 1;
+
+		if (m_Phase > TWOPI) //sample the input at the exact extremes of the crosfading wave
+		{
+			m_Phase-=TWOPI;
+			float interp= m_Phase / PhaseInc; //this division should be safe; PhaseInc should never be 0 at this moment
+			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); //interpolate based on how far we overshot the extreme of the wave 
+		}
+		else if (m_Phase > PI && LastPhase < PI)	//and again for the other s&h
+		{	float interp= (m_Phase - PI) / PhaseInc;
+			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+		}
+		float mix = cos(m_Phase);
+		float absmix = fabs(mix);
+		
+		mix = 0.5f + (0.5f * mix * (absmix + ((1 + drive) * (1 - absmix)))); //apply wave-shaping, then get signal in 0-1 range
+		Out[n] = (m_StoreA * mix) + (m_StoreB * (1 - mix)); //actual crossfading
+		m_LastIn=In[n];
+	}
+}
+
+void KasF::Process(unsigned int BufSize, Sample &In, Sample &CutoffCV, Sample &ResCV, float DriveCV, Sample &Out)
+{
+	float drive = fabs (DriveCV);
+	if (drive > 1) drive = 1;
+
+	for (unsigned int n=0; n<BufSize; n++)
+	{
+		float LastPhase=m_Phase;
+		float PhaseInc=m_PhasePerSample * fabs(CutoffCV[n]);
+		m_Phase+= PhaseInc;
+		float FeedBack = -1 * fabs(ResCV[n]);
+		if (FeedBack < -0.95) FeedBack = -0.95;
+		if (m_Phase > TWOPI)
+		{
+			m_Phase-=TWOPI;
+			float interp= m_Phase / PhaseInc;
+			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+		}
+		else if (m_Phase > PI && LastPhase < PI)
+		{	float interp= (m_Phase - PI) / PhaseInc;
+			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+		}
+		float mix = cos(m_Phase);
+		float absmix = fabs(mix);
+		
+		mix = 0.5f + (0.5f * mix * (absmix + ((1 + drive) * (1 - absmix))));
+		Out[n] = (m_StoreA * mix) + (m_StoreB * (1 - mix));
+		m_LastIn=In[n];
+	}
+}
+
+void KasF::Process(unsigned int BufSize, Sample &In, float CutoffCV, Sample &ResCV, Sample &DriveCV, Sample &Out)
+{
+	float PhaseInc = m_PhasePerSample * fabs(CutoffCV);
+
+	
+	for (unsigned int n=0; n<BufSize; n++)
+	{
+		float LastPhase=m_Phase;
+		m_Phase+= PhaseInc;
+		float FeedBack = -1 * fabs(ResCV[n]);
+		if (FeedBack < -0.95) FeedBack = -0.95;
+		float drive = fabs (DriveCV[n]);
+		if (drive > 1) drive = 1;
+
+		if (m_Phase > TWOPI)
+		{
+			m_Phase-=TWOPI;
+			float interp= m_Phase / PhaseInc;
+			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+		}
+		else if (m_Phase > PI && LastPhase < PI)
+		{	float interp= (m_Phase - PI) / PhaseInc;
+			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+		}
+		float mix = cos(m_Phase);
+		float absmix = fabs(mix);
+		
+		mix = 0.5f + (0.5f * mix * (absmix + ((1 + drive) * (1 - absmix))));
+		Out[n] = (m_StoreA * mix) + (m_StoreB * (1 - mix));
+		m_LastIn=In[n];
+	}
+}
+
+
+void KasF::Process(unsigned int BufSize, Sample &In, float CutoffCV, Sample &ResCV, float DriveCV, Sample &Out)
+{
+	float PhaseInc = m_PhasePerSample * fabs(CutoffCV);
+
+	float drive = fabs (DriveCV);
+	if (drive > 1) drive = 1;
+	
+	for (unsigned int n=0; n<BufSize; n++)
+	{
+		float LastPhase=m_Phase;
+		m_Phase+= PhaseInc;
+		float FeedBack = -1 * fabs(ResCV[n]);
+		if (FeedBack < -0.95) FeedBack = -0.95;
+		if (m_Phase > TWOPI)
+		{
+			m_Phase-=TWOPI;
+			float interp= m_Phase / PhaseInc;
+			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+		}
+		else if (m_Phase > PI && LastPhase < PI)
+		{	float interp= (m_Phase - PI) / PhaseInc;
+			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+		}
+		float mix = cos(m_Phase);
+		float absmix = fabs(mix);
+		
+		mix = 0.5f + (0.5f * mix * (absmix + ((1 + drive) * (1 - absmix))));
+		Out[n] = (m_StoreA * mix) + (m_StoreB * (1 - mix));
+		m_LastIn=In[n];
+	}
+}
+
+void KasF::Process(unsigned int BufSize, Sample &In, Sample &CutoffCV, float ResCV, Sample &DriveCV, Sample &Out)
+{
+	float FeedBack = -1 * fabs(ResCV);
+	if (FeedBack < -0.95) FeedBack = -0.95;
+
+	for (unsigned int n=0; n<BufSize; n++)
+	{
+		float drive = fabs (DriveCV[n]);
+		if (drive > 1) drive = 1;
+
+		float LastPhase=m_Phase;
+		float PhaseInc=m_PhasePerSample * fabs(CutoffCV[n]);
+		m_Phase+= PhaseInc;
+	
+		if (m_Phase > TWOPI)
+		{
+			m_Phase-=TWOPI;
+			float interp= m_Phase / PhaseInc;
+			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+		}
+		else if (m_Phase > PI && LastPhase < PI)
+		{	float interp= (m_Phase - PI) / PhaseInc;
+			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+		}
+		float mix = cos(m_Phase);
+		float absmix = fabs(mix);
+		
+		mix = 0.5f + (0.5f * mix * (absmix + ((1 + drive) * (1 - absmix))));
+
+		Out[n] = (m_StoreA * mix) + (m_StoreB * (1 - mix));
+		m_LastIn=In[n];
+	}
+}
+
+void KasF::Process(unsigned int BufSize, Sample &In, Sample &CutoffCV, float ResCV, float DriveCV, Sample &Out)
+{
+	float FeedBack = -1 * fabs(ResCV);
+	if (FeedBack < -0.95) FeedBack = -0.95;
+
+	float drive = fabs (DriveCV);
+	if (drive > 1) drive = 1;
+	
+	for (unsigned int n=0; n<BufSize; n++)
+	{
+		float LastPhase=m_Phase;
+		float PhaseInc=m_PhasePerSample * fabs(CutoffCV[n]);
+		m_Phase+= PhaseInc;
+	
+		if (m_Phase > TWOPI)
+		{
+			m_Phase-=TWOPI;
+			float interp= m_Phase / PhaseInc;
+			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+		}
+		else if (m_Phase > PI && LastPhase < PI)
+		{	float interp= (m_Phase - PI) / PhaseInc;
+			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+		}
+		float mix = cos(m_Phase);
+		float absmix = fabs(mix);
+		
+		mix = 0.5f + (0.5f * mix * (absmix + ((1 + drive) * (1 - absmix))));
+
+		Out[n] = (m_StoreA * mix) + (m_StoreB * (1 - mix));
+		m_LastIn=In[n];
+	}
+}
+
+void KasF::Process(unsigned int BufSize, Sample &In, float CutoffCV, float ResCV, Sample &DriveCV, Sample &Out)
+{
+	float PhaseInc = m_PhasePerSample * fabs(CutoffCV);
+
+	float FeedBack = -1 * fabs(ResCV);
+	if (FeedBack < -0.95) FeedBack = -0.95;
+		
+	for (unsigned int n=0; n<BufSize; n++)
+	{
+		float drive = fabs (DriveCV[n]);
+		if (drive > 1) drive = 1;
+
+		float LastPhase=m_Phase;
+		m_Phase+= PhaseInc;
+	
+		if (m_Phase > TWOPI)
+		{
+			m_Phase-=TWOPI;
+			float interp= m_Phase / PhaseInc;
+			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+		}
+		else if (m_Phase > PI && LastPhase < PI)
+		{	float interp= (m_Phase - PI) / PhaseInc;
+			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+		}
+		float mix = cos(m_Phase);
+		float absmix = fabs(mix);
+		
+		mix = 0.5f + (0.5f * mix * (absmix + ((1 + drive) * (1 - absmix))));
+		Out[n] = (m_StoreA * mix) + (m_StoreB * (1 - mix));
+		m_LastIn=In[n];
+	}
+}
+
+void KasF::Process(unsigned int BufSize, Sample &In, float CutoffCV, float ResCV, float DriveCV, Sample &Out)
+{
+	float PhaseInc = m_PhasePerSample * fabs(CutoffCV);
+
+	float FeedBack = -1 * fabs(ResCV);
+	if (FeedBack < -0.95) FeedBack = -0.95;
+	
+	float drive = fabs (DriveCV);
+	if (drive > 1) drive = 1;
+	
+	for (unsigned int n=0; n<BufSize; n++)
+	{
+		float LastPhase=m_Phase;
+		m_Phase+= PhaseInc;
+	
+		if (m_Phase > TWOPI)
+		{
+			m_Phase-=TWOPI;
+			float interp= m_Phase / PhaseInc;
+			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+		}
+		else if (m_Phase > PI && LastPhase < PI)
+		{	float interp= (m_Phase - PI) / PhaseInc;
+			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+		}
+		float mix = cos(m_Phase);
+		float absmix = fabs(mix);
+		
+		mix = 0.5f + (0.5f * mix * (absmix + ((1 + drive) * (1 - absmix))));
+		Out[n] = (m_StoreA * mix) + (m_StoreB * (1 - mix));
+		m_LastIn=In[n];
+	}
+}

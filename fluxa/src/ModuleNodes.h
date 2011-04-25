@@ -49,6 +49,19 @@ private:
 	unsigned int m_Shape;
 };
 
+class LfoNode : public GraphNode
+{
+public:
+	LfoNode(unsigned int Shape, unsigned int SampleRate);
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+	
+private:
+	WaveTable m_WaveTable;
+	unsigned int m_Shape;
+};
+
+
 class KSNode : public GraphNode
 {
 public:
@@ -97,6 +110,19 @@ private:
 	Sample m_Temp;
 };
 
+class RampNode : public GraphNode
+{
+public:
+	RampNode(unsigned int SampleRate);
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+	
+private:
+	Ramp m_Ramp;
+	Sample m_Temp;
+};
+
+
 class MathNode : public GraphNode
 {
 public:
@@ -140,6 +166,17 @@ private:
 	Sample m_Temp;
 };
 
+class ScrubNode : public GraphNode
+{
+public:
+	ScrubNode(unsigned int samplerate);
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+
+private:
+	Scrubber m_Scrubber; 
+};
+
 class EffectNode : public GraphNode
 {
 public:
@@ -153,6 +190,26 @@ private:
 	Type m_Type;
 	Delay m_Delay;
 };
+
+class DelTrigNode : public GraphNode
+{
+public:
+	DelTrigNode();
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+};
+
+class KasFiltNode : public GraphNode
+{
+public:
+	KasFiltNode(unsigned int SampleRate);
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+	
+private:
+	KasF m_KasF;
+};
+
 
 #endif
 
