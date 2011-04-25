@@ -129,6 +129,7 @@ protected:
 	void ParseParentheses();
 	void ParseOpenParentheses(int pos, int type);
 	void ParseCloseParentheses(int pos, int type);
+	void ExpandHighlightedExpression(int start, int end);
 
 	int GetCurrentLine();
 	void SetCurrentLine(int line);

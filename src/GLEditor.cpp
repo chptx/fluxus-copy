@@ -761,12 +761,27 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				m_Position+=m_CopyBuffer.size();
 			break;
 			case 20: //"t" for "take", or something? not many keys left...
-				if (m_ParenthesesHighlight[0]<m_ParenthesesHighlight[1] )
+				if (!m_Selection) 
 				{
-					m_HighlightStart = m_ParenthesesHighlight[0];
-					m_HighlightEnd = 1 + m_ParenthesesHighlight[1];
-					m_Selection=true;
+					if (m_ParenthesesHighlight[0]<m_ParenthesesHighlight[1] )
+					{	
+						//match selection to highlighted expression if there is one
+						m_HighlightStart = m_ParenthesesHighlight[0];
+						m_HighlightEnd = 1 + m_ParenthesesHighlight[1];
+						m_Selection=true;
+					}
+					else
+					{
+						//otherwise take the expression we are currently in (if one)
+						ExpandHighlightedExpression(m_Position, m_Position);	
+					}
 				}
+				else
+				{
+					//if there is a selection already, attempt to expand one level "outward"
+					ExpandHighlightedExpression(m_HighlightStart, m_HighlightEnd);
+				}
+				
 			break;
 			/*case GLEDITOR_PLUS: // zoom in
 				m_Scale*=1.1f;
@@ -1019,7 +1034,7 @@ void GLEditor::ParseOpenParentheses(int pos, int type)
 	while(stack!=-1 && pos<(int)m_Text.size())
 	{
 		if (m_Text[pos]==m_OpenChars[type]) stack++;
-		if (m_Text[pos]==m_CloseChars[type]) stack--;
+		else if (m_Text[pos]==m_CloseChars[type]) stack--;
 		pos++;
 	}
 	if (stack==-1)
@@ -1037,7 +1052,7 @@ void GLEditor::ParseCloseParentheses(int pos, int type)
 	while(stack!=-1 && pos>=0)
 	{
 		if (m_Text[pos]==m_CloseChars[type]) stack++;
-		if (m_Text[pos]==m_OpenChars[type]) stack--;
+		else if (m_Text[pos]==m_OpenChars[type]) stack--;
 		pos--;
 	}
 	if (stack==-1)
@@ -1045,4 +1060,63 @@ void GLEditor::ParseCloseParentheses(int pos, int type)
 		m_ParenthesesHighlight[0]=pos+1;
 		m_ParenthesesHighlight[1]=start_pos;
 	}	
+}
+
+void GLEditor::ExpandHighlightedExpression(int start, int end)
+{
+	// looking for a open, so search backward
+	bool foundOpen = false;
+	int stack=0, type = 0, selStart = 0, pos = start;
+	pos--;
+	while(stack!=-1 && pos>=0)
+	{
+		bool foundParen = false;
+		for (wstring::iterator i=m_CloseChars.begin(); i!=m_CloseChars.end(); i++)
+		{
+			if (m_Text[pos]==*i)
+			{
+				stack++;
+				foundParen = true;
+				break;
+			}
+		}
+		if (!foundParen)
+		{	
+			type = 0;
+			for (wstring::iterator i=m_OpenChars.begin(); i!=m_OpenChars.end(); i++)
+			{
+				if (m_Text[pos]==*i)
+				{
+					stack--;
+					break;
+				}
+			type++;
+			}
+		}
+		pos--;
+	}
+	if (stack==-1)
+		{
+		foundOpen = true;
+		 selStart=pos+1;
+		}
+	if (foundOpen)
+	{
+		// looking for a close, so search forward
+		stack=0, pos = end;
+		//pos++;
+		while(stack!=-1 && pos<(int)m_Text.size())
+		{
+			if (m_Text[pos]==m_OpenChars[type]) stack++;
+			else if (m_Text[pos]==m_CloseChars[type]) stack--;
+			pos++;
+		}
+		if (stack==-1)
+		{
+			m_HighlightStart=selStart;
+			m_HighlightEnd=pos;
+			m_Selection=true;
+		}
+
+	}
 }
