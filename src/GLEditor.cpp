@@ -875,6 +875,12 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				break;
 				case GLEDITOR_TAB: // tab
 				{
+					if (m_Selection) //this should probably increase indentation in the future, now it's just avoiding inconsistent weirdness 
+					{
+						m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart); 
+						m_Position=m_HighlightStart;						
+						m_Selection=false;
+					}
 					m_Text.insert(m_Position,L"    ");
 					m_Position+=4;
 				}
