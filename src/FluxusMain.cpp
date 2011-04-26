@@ -123,7 +123,7 @@ void FluxusMain::Handle(unsigned char key, int button, int special, int state, i
 	if (mod&GLUT_ACTIVE_CTRL)
 	{
 		//for testing
-//		cout << "KEY:" << key << " / " << state << endl;
+		cout << "KEY:" << key << " / " << state << endl;
 
 		// pretty sure this is going to have to change...
 		switch(key)

@@ -33,6 +33,7 @@
 #define GLEDITOR_CUT 24 
 #define GLEDITOR_COPY 3 
 #define GLEDITOR_PASTE 22 
+#define GLEDITOR_ALL 1 
 #define GLEDITOR_PLUS 61 
 #define GLEDITOR_MINUS 45 
 

@@ -649,13 +649,21 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 		{
 			case GLUT_KEY_RIGHT: 
 			{
-				if (!m_Text.empty()) m_Position++; 
+				if (!m_Text.empty())
+				{
+					if (m_Selection && !mod&GLUT_ACTIVE_SHIFT) m_Position = m_HighlightEnd;
+					else m_Position++;
+				} 
 				m_DesiredXPos=OffsetToCurrentLineStart(); 
 			}
 			break;
 			case GLUT_KEY_LEFT: 
 			{
-				if (m_Position>0) m_Position--;  
+				if (m_Position>0)
+				{
+					if (m_Selection && !mod&GLUT_ACTIVE_SHIFT) m_Position = m_HighlightStart;
+					else m_Position--;
+				}  
 				m_DesiredXPos=OffsetToCurrentLineStart(); 
 			}
 			break;
@@ -681,6 +689,10 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 					
 					if (m_Position<m_TopTextPosition) m_TopTextPosition=LineStart(m_Position);
 				}
+				else //if we're on the first line we go to the text start
+				{
+				m_Position=0;
+				}
 			}
 			break;
 			case GLUT_KEY_DOWN: 
@@ -691,6 +703,10 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 					if (nextlinelength<m_DesiredXPos) m_Position=LineEnd(LineEnd(m_Position)+1); // end of next
 					else m_Position=LineStart(LineEnd(m_Position)+1)+m_DesiredXPos; // start of next+offset
 					if (m_Position>=m_BottomTextPosition) m_TopTextPosition=LineEnd(m_TopTextPosition)+1;
+				}
+				else //if we are on the last line go to the end
+				{
+				m_Position=m_Text.size();
 				}
 			}
 			break;
@@ -733,6 +749,7 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 		//for testing key values
 		//cout <<"EDITOR RECEIVED KEY:" << key << "/" << state << endl;
 		
+		
 		switch (key)
 		{
 			case 17: ClearAllText(); break;
@@ -742,10 +759,7 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				{
 					m_CopyBuffer=m_Text.substr(m_HighlightStart,m_HighlightEnd-m_HighlightStart);
 					m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart);
-					if (m_Position>=m_HighlightEnd) 
-					{
-						m_Position-=m_HighlightEnd-m_HighlightStart;
-					}	
+					m_Position=m_HighlightStart;	
 					m_Selection=false;
 				}
 			break;
@@ -756,9 +770,23 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				}
 			break;
 			case GLEDITOR_PASTE: // paste
+				if (m_Selection) 
+				{
+					m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart); 
+					m_Position=m_HighlightStart;
+											
+					m_Selection=false;
+				}
 				m_Text.insert(m_Position,m_CopyBuffer);
-				m_Selection=false;
 				m_Position+=m_CopyBuffer.size();
+			break;
+			case GLEDITOR_ALL: //all
+				if(!m_Text.empty())
+				{
+					m_HighlightStart=0;
+					m_HighlightEnd=m_Text.size();
+					m_Selection=true;
+				}
 			break;
 			case 20: //"t" for "take", or something? not many keys left...
 				if (!m_Selection) 
@@ -810,21 +838,34 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 		{	
 			switch(key)
 			{
-				case GLEDITOR_DELETE: m_Text.erase(m_Position,1); break; // delete
+				case GLEDITOR_DELETE:  // delete
+				{
+					if (!m_Text.empty() )
+					{
+						if (m_Selection) 
+						{
+							m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart);
+							m_Position=m_HighlightStart; 
+							m_Selection=false;
+						}
+						else 
+						{
+						m_Text.erase(m_Position,1);	
+						}
+					}
+				} 
+				break;
 				case GLEDITOR_BACKSPACE: // backspace
 				{
-					if (!m_Text.empty() && m_Position!=0)
+					if (!m_Text.empty() )
 					{
 						if (m_Selection) 
 						{
 							m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart); 
-							if (m_Position>=m_HighlightEnd) 
-							{
-								m_Position-=m_HighlightEnd-m_HighlightStart;
-							}						
+							m_Position=m_HighlightStart;						
 							m_Selection=false;
 						}
-						else
+						else if ( m_Position!=0 )
 						{
 							m_Text.erase(m_Position-1,1); 
 							m_Position--; 
@@ -845,57 +886,54 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 					// panic editor reset :)
 				    m_Position=0;
 				    m_TopTextPosition=0;
-		    	}
+		    		}
 				break;
 				case GLEDITOR_RETURN: 
 					key='\n'; // fallthrough (replacement of newline)
 				default:
-					if (m_Selection)
-                    {
-                        m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart);
-                        if (m_Position>=m_HighlightEnd)
-                        {
-                            m_Position-=m_HighlightEnd-m_HighlightStart;
-                        }
-                        m_Selection=false;
-                    }                                       
+				if (m_Selection)
+				{
+					m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart);
+					m_Position=m_HighlightStart;
+					m_Selection=false;
+				}                                       
 
-                    if (m_FirstUTF8Byte)
-                    {
-                        string temp("  ");
-                        temp[0]=m_FirstUTF8Byte;
-                        temp[1]=key;
-                        m_Text.insert(m_Position,string_to_wstring(temp));
-                        m_FirstUTF8Byte=0;
-                    }
-                    else
-                    {
-                        if (key<0x80)
-                        {
-                            string temp(" ");
-                            temp[0]=key;
-                            m_Text.insert(m_Position,string_to_wstring(temp));
-                        }
-                        else
-                        {
-                            wchar_t k[2];
-                            memset(&k,0,sizeof(wchar_t)*2);
-                            k[0]=key;
-                            m_Text.insert(m_Position,wstring(k));
-                        }
-                    }
+				if (m_FirstUTF8Byte)
+				{
+					string temp("  ");
+					temp[0]=m_FirstUTF8Byte;
+					temp[1]=key;
+					m_Text.insert(m_Position,string_to_wstring(temp));
+					m_FirstUTF8Byte=0;
+				}
+				else
+				{
+					if (key<0x80)
+					{
+					    string temp(" ");
+					    temp[0]=key;
+					    m_Text.insert(m_Position,string_to_wstring(temp));
+					}
+					else
+					{
+					    wchar_t k[2];
+					    memset(&k,0,sizeof(wchar_t)*2);
+					    k[0]=key;
+					    m_Text.insert(m_Position,wstring(k));
+					}
+				}
 
 					//char temp[2];
 					//temp[0]=(char)key;
 					//temp[1]='\0';
 					//m_Text.insert(m_Position,wstring(temp));
-                    //m_Text.insert(m_Position,key);
+                    			//m_Text.insert(m_Position,key);
 
-					m_Position++;
-					if (key=='\n' && m_Position>=m_BottomTextPosition && m_LineCount+1>=m_VisibleLines) 
-					{
-						m_TopTextPosition=LineEnd(m_TopTextPosition)+1;
-					}
+				m_Position++;
+				if (key=='\n' && m_Position>=m_BottomTextPosition && m_LineCount+1>=m_VisibleLines) 
+				{
+					m_TopTextPosition=LineEnd(m_TopTextPosition)+1;
+				}
 				break;
 			}
 		}
@@ -903,24 +941,36 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 	
 	if (m_Position<0) m_Position=0;
 	if (m_Position>m_Text.size()) m_Position=m_Text.size();
-	
+
 	if (key==0 && !m_ShiftState && mod&GLUT_ACTIVE_SHIFT)
+	{ 
+		m_ShiftState=true;
+	}
+
+	
+	if (key==0 && m_ShiftState && !m_Selection)
 	{ 
 		m_HighlightStart=startpos;
 		m_HighlightEnd=startpos;
-		m_ShiftState=true;
 		m_Selection=true;
 	}
 
-	if (key==0 && special!=GLUT_KEY_F5 && ( m_ShiftState || m_Selection )  && !mod&GLUT_ACTIVE_SHIFT)
+
+	if (key==0 && special!=GLUT_KEY_F5 &&  m_ShiftState   && !mod&GLUT_ACTIVE_SHIFT)
 	{
 		m_ShiftState=false;
+	}
+
+	
+	if (key==0 && m_Selection && !m_ShiftState ) 
+	{
 		m_Selection=false;
 	}
+	
 
 	if (m_ShiftState)
 	{
-		if (m_Position<m_HighlightStart) m_HighlightStart=m_Position;
+		if (m_Position<=m_HighlightStart) m_HighlightStart=m_Position;
 		else m_HighlightEnd=m_Position;
 	}
 	
@@ -1000,7 +1050,8 @@ unsigned int GLEditor::LineEnd(int pos)
 {
 	if (m_Text.empty()) return 0;
 	size_t end = m_Text.find(L"\n",pos);
-	if (end==wstring::npos) end=m_Text.size()-1;
+	//if (end==wstring::npos) end=m_Text.size()-1;
+	if (end==wstring::npos) end=m_Text.size();
 	return end;
 }
 
