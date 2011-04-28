@@ -193,6 +193,7 @@ void FluxusMain::Handle(unsigned char key, int button, int special, int state, i
 			case 57: SetCurrentEditor(8); break; // 9
 			case 48: SetCurrentEditor(9); break; // 0
 #endif
+			default: break;
 		}
 	}
 

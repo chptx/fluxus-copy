@@ -670,7 +670,7 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 			case GLUT_KEY_END: 
 			{
 				m_Position=LineEnd(m_Position);
-				m_DesiredXPos=OffsetToCurrentLineStart()+1; 
+				m_DesiredXPos=OffsetToCurrentLineStart(); 
 			}
 			break;
 			case GLUT_KEY_HOME: 
@@ -692,6 +692,7 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				else //if we're on the first line we go to the text start
 				{
 				m_Position=0;
+				m_DesiredXPos=0;
 				}
 			}
 			break;
@@ -707,6 +708,7 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				else //if we are on the last line go to the end
 				{
 				m_Position=m_Text.size();
+				m_DesiredXPos=OffsetToCurrentLineStart();
 				}
 			}
 			break;
@@ -759,7 +761,8 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				{
 					m_CopyBuffer=m_Text.substr(m_HighlightStart,m_HighlightEnd-m_HighlightStart);
 					m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart);
-					m_Position=m_HighlightStart;	
+					m_Position=m_HighlightStart;
+					m_DesiredXPos=OffsetToCurrentLineStart();	
 					m_Selection=false;
 				}
 			break;
@@ -779,6 +782,7 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				}
 				m_Text.insert(m_Position,m_CopyBuffer);
 				m_Position+=m_CopyBuffer.size();
+				m_DesiredXPos=OffsetToCurrentLineStart();
 			break;
 			case GLEDITOR_ALL: //all
 				if(!m_Text.empty())
