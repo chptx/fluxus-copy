@@ -27,10 +27,10 @@ SonotopyInterface::SonotopyInterface(int sampleRate, int bufferSize) {
                                               spectrumAnalyzer->getSpectrumResolution());
   beatTracker = new BeatTracker(spectrumBinDivider->getNumBins(), bufferSize, sampleRate);
 
+  circleMapParameters.adaptationStrategy = SpectrumMapParameters::TimeBased;
   circleMap = new CircleMap(audioParameters, circleMapParameters);
 
   gridMapParameters.adaptationStrategy = SpectrumMapParameters::TimeBased;
-
   gridMap = new GridMap(audioParameters, gridMapParameters);
   gridMapWidth = gridMapParameters.gridWidth;
   gridMapHeight = gridMapParameters.gridHeight;

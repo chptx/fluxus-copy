@@ -8,9 +8,11 @@
 (set-camera-transform (mtranslate #(0 0 -10)))
 (scale #(21 16 1))
 
-(define-values (sw sh _) (vector->values (grid-size)))
+(define sw 40)
+(define sh 30)
+(grid-size (vector sw sh 0))
 (define p (build-pixels sw sh))
-(define contrast 15.0)
+(define contrast 5.0)
 
 ; flattens the 2d grid
 (define (vector2d->vector1d v)
