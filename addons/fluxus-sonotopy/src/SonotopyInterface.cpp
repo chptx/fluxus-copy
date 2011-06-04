@@ -144,3 +144,8 @@ float SonotopyInterface::getGridMapActivation(unsigned int x, unsigned int y) {
 void SonotopyInterface::getGridCursor(float &x, float &y) {
   gridMap->getCursor(x, y);
 }
+
+void SonotopyInterface::resetAdaptations() {
+  circleMap->resetAdaptation();
+  gridMap->resetAdaptation();
+}

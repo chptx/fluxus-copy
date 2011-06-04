@@ -460,6 +460,20 @@ Scheme_Object *path_cursor(int argc, Scheme_Object **argv) {
 
 
 
+// StartFunctionDoc-en
+// reset-sonotopy
+// Returns: void
+// Description:
+// Resets adaptations to previously encountered audio, and restarts "from scratch." Can speed up re-adaptation when switching from one music track to another, especially for tracks of different style/genre.
+// EndFunctionDoc
+
+Scheme_Object *reset_sonotopy(int argc, Scheme_Object **argv) {
+  if(sonotopyInterface != NULL)
+    sonotopyInterface->resetAdaptations();
+  return scheme_void;
+}
+
+
 /////////////////////
 
 #ifdef STATIC_LINK
@@ -501,6 +515,8 @@ Scheme_Object *scheme_reload(Scheme_Env *env)
 		    scheme_make_prim_w_arity(grid_pattern_node, "grid-pattern-node", 2, 2), menv);
   scheme_add_global("path-cursor",
 		    scheme_make_prim_w_arity(path_cursor, "path-cursor", 0, 0), menv);
+  scheme_add_global("reset-sonotopy",
+		    scheme_make_prim_w_arity(reset_sonotopy, "reset-sonotopy", 0, 0), menv);
 
   scheme_finish_primitive_module(menv);
   MZ_GC_UNREG();

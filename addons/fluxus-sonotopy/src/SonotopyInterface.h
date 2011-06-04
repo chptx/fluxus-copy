@@ -34,6 +34,7 @@ class SonotopyInterface {
   unsigned int getGridMapHeight();
   void setGridMapSize(unsigned int width, unsigned int height);
   void getGridCursor(float &x, float &y);
+  void resetAdaptations();
 
  private:
   sonotopy::BeatTracker *beatTracker;
