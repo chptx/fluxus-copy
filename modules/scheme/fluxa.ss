@@ -640,7 +640,7 @@
 
 ;; StartFunctionDoc-en
 ;; xfade signal1-number-or-node signal2-number-or-node mix-number-or-node
-;; Returns: node-id-number
+;; Returns: number if all arguments are numbers, else node-id-number
 ;; Description:
 ;; Crossfader. Linearly crossfades between two signals or values 
 ;; "mix" ranges from 0 t0 1.
@@ -648,12 +648,14 @@
 ;; (play-now (xfade (sine 200) (saw 100) (lfo-sine 1))
 ;; EndFunctionDoc
 
-(define (xfade s0 s1 mix)
+(define (xfade s0 s1 mix) 
 	(cond
 		((not (or (number? s0) (node? s0))) (raise-type-error 'xfade "number-or-node" 0 s0 s1 mix))
 		((not (or (number? s1) (node? s1))) (raise-type-error 'xfade "number-or-node" 1 s0 s1 mix))
 		((not (or (number? mix) (node? mix))) (raise-type-error 'xfade "number-or-node" 2 s0 s1 mix))
+		((and (number? s0) (number? s1) (number? mix)) (+ s0 (* (- s1 s0) (min 1 (max 0 mix)))))
 		(else (operator XFADE (list s0 s1 mix)))))
+
 
 ;; StartFunctionDoc-en
 ;; s&h signal1-number-or-node CV-number-or-node 
