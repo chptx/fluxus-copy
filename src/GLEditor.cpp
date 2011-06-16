@@ -776,8 +776,7 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				if (m_Selection) 
 				{
 					m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart); 
-					m_Position=m_HighlightStart;
-											
+					m_Position=m_HighlightStart;						
 					m_Selection=false;
 				}
 				m_Text.insert(m_Position,m_CopyBuffer);
@@ -981,7 +980,7 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 	if (m_ShiftState)
 	{
 		if (m_Position<=m_HighlightStart) m_HighlightStart=m_Position;
-		else m_HighlightEnd=m_Position;
+		else if (m_Position>m_HighlightEnd) m_HighlightEnd=m_Position;
 	}
 	
 	/*cerr<<"----------------"<<endl;
@@ -1161,6 +1160,7 @@ void GLEditor::ExpandHighlightedExpression(int start, int end)
 		foundOpen = true;
 		 selStart=pos+1;
 		}
+	cerr << "foundOpen: " << foundOpen << endl;
 	if (foundOpen)
 	{
 		// looking for a close, so search forward
