@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 #include "Types.h"
-#include "Event.h"
+//#include "Event.h"   //not sure we still need events at all? -Kas
 #include "Sample.h"
 #include "Trace.h"
 
@@ -29,35 +29,27 @@
 using namespace spiralcore;
 using namespace std;
 
-struct OutBuffer
-{
-	Sample Left;
-	Sample Right;
-};
+
 
 class Sampler
 {
 public:
 	Sampler(unsigned int samplerate);
 	virtual ~Sampler();
-
-	EventID Play(float timeoffset, const Event &Channel);	
-	virtual void Process(uint32 BufSize, Sample &left, Sample &right);
 	
-	void SetPoly(bool s) { m_Poly=s; }
-	void SetReverse(bool s) { m_Reverse=s; }
+	virtual void Process(uint32 BufSize, Sample &out, Sample &control);
+	virtual void Process(uint32 BufSize, Sample &out, float freq);
+	virtual void SetSampleId(int ID);
+	virtual void SetStartTime(float time);
+	
 	
 private:
 	unsigned int m_SampleRate;
-	
-	bool m_Poly;
-	bool m_Reverse;
+	unsigned int m_SampleId;
+	float m_SampleTime;
+	float m_ChangePerHz;
 	float m_StartTime;
-	Event m_Globals;
-	EventID m_PlayingOn;
-	
- 	map<EventID,Event> m_ChannelMap;
- 	int m_NextEventID;
+	float m_Position;
 };
 
 class Scrubber

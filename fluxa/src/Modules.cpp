@@ -309,6 +309,7 @@ void WaveTable::ProcessLfo(unsigned int BufSize, Sample &In)
 			if (m_Time<0) //wait for trigger time to accomplish sync
 			{
 				m_Time+=m_TimePerSample;
+				m_CyclePos=0;
 				In[n]= 0.5 + (0.5*m_Table[(int)m_Type][m_CyclePos]);
 			}
 			else
@@ -344,6 +345,7 @@ void WaveTable::ProcessLfoFM(unsigned int BufSize, Sample &In, const Sample &Per
 		if (m_Time<0) //wait for trigger time to accomplish sync
 		{
 			m_Time+=m_TimePerSample;
+			m_CyclePos=0;
 			In[n]= 0.5 + (0.5*m_Table[(int)m_Type][m_CyclePos]);
 		}
 		else

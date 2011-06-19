@@ -1160,7 +1160,6 @@ void GLEditor::ExpandHighlightedExpression(int start, int end)
 		foundOpen = true;
 		 selStart=pos+1;
 		}
-	cerr << "foundOpen: " << foundOpen << endl;
 	if (foundOpen)
 	{
 		// looking for a close, so search forward

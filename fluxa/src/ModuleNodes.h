@@ -161,9 +161,7 @@ public:
 	virtual void Process(unsigned int bufsize);
 	
 private:
-	PlayMode m_PlayMode;
 	Sampler m_Sampler;
-	Sample m_Temp;
 };
 
 class ScrubNode : public GraphNode

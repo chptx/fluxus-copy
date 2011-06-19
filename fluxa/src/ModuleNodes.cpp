@@ -364,7 +364,6 @@ void FilterNode::Process(unsigned int bufsize)
 
 SampleNode::SampleNode(unsigned int samplerate):
 GraphNode(2),
-m_PlayMode(TRIGGER),
 m_Sampler(samplerate)
 {
 }
@@ -375,10 +374,8 @@ void SampleNode::Trigger(float time)
 	
 	if (ChildExists(0))
 	{
-		Event e;
-		e.ID = (int)GetChild(0)->GetCVValue();
-		e.Frequency = GetChild(1)->GetCVValue();
-		m_Sampler.Play(time, e);
+		m_Sampler.SetSampleId( (int)GetChild(0)->GetCVValue());
+		m_Sampler.SetStartTime(time);
 	}
 }
 
@@ -387,12 +384,21 @@ void SampleNode::Process(unsigned int bufsize)
 	if (bufsize>(unsigned int)m_Output.GetLength())
 	{
 		m_Output.Allocate(bufsize);
-		m_Temp.Allocate(bufsize);
 	}
 	
 	ProcessChildren(bufsize);
 	m_Output.Zero();
-	m_Sampler.Process(bufsize, m_Output, m_Temp);
+	if (ChildExists(1))
+	{
+		if (GetChild(1)->IsTerminal())
+		{
+			m_Sampler.Process(bufsize, m_Output, GetChild(1)->GetCVValue());
+		}
+		else
+		{
+			m_Sampler.Process(bufsize, m_Output, GetInput(1));
+		}
+	}
 }
 
 ScrubNode::ScrubNode(unsigned int samplerate):
@@ -404,7 +410,10 @@ m_Scrubber(samplerate)
 void ScrubNode::Trigger(float time)
 {
 	TriggerChildren(time);
-	m_Scrubber.SetSampleId( (int)GetChild(0)->GetCVValue());
+	if (ChildExists(0))
+	{
+		m_Scrubber.SetSampleId( (int)GetChild(0)->GetCVValue());
+	}
 }
 
 void ScrubNode::Process(unsigned int bufsize)

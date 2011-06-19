@@ -25,137 +25,86 @@ static const unsigned int SAFETY_MAX_CHANNELS=30;
 
 Sampler::Sampler(unsigned int samplerate) :
 m_SampleRate(samplerate),
-m_Poly(true),
-m_Reverse(false),
-m_StartTime(0),
-m_NextEventID(1)
+m_StartTime(0)
 {
+m_SampleTime=1.0/(float)m_SampleRate;
+m_ChangePerHz=1.0/440.0; //avoid a division per sample period
 }
 
 Sampler::~Sampler()
 {
 }
 
-EventID Sampler::Play(float timeoffset, const Event &event)
+void Sampler::Process(uint32 BufSize, Sample &out, float freq)
 {
-	Sample* sample = SampleStore::Get()->GetSample(event.ID);
-	if (sample!=NULL)
-	{
-		Event Copy = event;
-		if (Copy.Frequency==0)
-		{
-			cerr<<"Cancelling zero speed sample"<<endl;
-			return 0;
-		}
-		
-		// start playing from first non-zero sample
-		/*if (0)//m_AutoCue)
-		{
-			float s=1;
-			int c=0;
-			while (s==0 && c<sample->GetLength())
-			{
-				s=(*sample)[c++];
-			}
-			Copy.Position=c;  
-		}*/
-		
-		while (m_ChannelMap.size()>SAFETY_MAX_CHANNELS)
-		{	
-			Trace(RED,BLACK,"channels exceeded %d, culling!",SAFETY_MAX_CHANNELS);
-			m_ChannelMap.erase(m_ChannelMap.begin());
-		}
+	Sample *sample = SampleStore::Get()->GetSample(m_SampleId);
 
-
-		Copy.Position+=((m_StartTime+timeoffset)*(float)m_SampleRate)*(Copy.Frequency/440.0)*
-			(m_Globals.Frequency/440.0);
-		m_ChannelMap[m_NextEventID++]=Copy;
-		
-		// if poly mode is turned off, remove the last playing sample
-		if (!m_Poly)
-		{
-			map<EventID,Event>::iterator i=m_ChannelMap.find(m_PlayingOn);
-			while(i!=m_ChannelMap.end())
+	if (sample != NULL) //avoid lost samples
+	{					
+		unsigned int length = sample->GetLength();
+		if  (length > 0) //avoid not yet fully loaded samples as these currently get things stuck
+		{		
+			if (m_StartTime < 0) //set playback postion to the end before we start playing for reversed samples
+				{
+					if (freq < 0) m_Position = length; 
+					else m_Position = 0;
+				}
+			float speed = m_ChangePerHz * freq;
+			for (uint32 n=0; n<BufSize; n++)
 			{
-	       		m_ChannelMap.erase(i);
-				i=m_ChannelMap.find(m_PlayingOn);
+				if (m_StartTime < 0) //wait for our scheduled start
+				{
+					m_StartTime += m_SampleTime;
+				}
+				else
+				{
+					m_Position += speed;
+					if (m_Position<0) m_Position = 0;                 //by keeping things in range and always basing the output on the file
+					else if (m_Position>length) m_Position = length;  //instead of returning 0, we make sure a adsr can always avoid clicks caused by
+				}													  //any DC offset the file may have. This shouldn't cost more as we need those 
+				out[n] = (*sample)[m_Position];						  //conditions anyway.
 			}
 		}
-		
-		m_PlayingOn=m_NextEventID-1;
-		return m_NextEventID-1;
 	}
-	else
-	{
-		cerr<<"Could not find sample "<<event.ID<<" to play"<<endl;
-	}
-
-	return 0;
 }
 
-void Sampler::Process(uint32 BufSize, Sample &left, Sample &right)
+void Sampler::Process(uint32 BufSize, Sample &out, Sample &freq)
 {
-	static uint32 highwater=0;
-	if (m_ChannelMap.size()>highwater)
-	{
-		highwater=m_ChannelMap.size();
-		//cerr<<"Channels highwater mark now at : "<<highwater<<endl;
-	}
+	Sample *sample = SampleStore::Get()->GetSample(m_SampleId);
 
-	map<EventID,Event>::iterator nexti=m_ChannelMap.begin();
-	for (map<EventID,Event>::iterator i=m_ChannelMap.begin();
-	       i!=m_ChannelMap.end();)
-	{
-		nexti++; // used so we can delete the current channel
-		Event *ch = &i->second;
-		Sample *sample = SampleStore::Get()->GetSample(ch->ID);
-		// check we still have the sample
-		if (sample != NULL)
-		{			
-			float Volume = ch->Volume*m_Globals.Volume*10.0f;
-			float Speed =  (ch->Frequency/440.0)*(m_Globals.Frequency/440.0);
-			
-			float Pan = 0;
-			
-			if (m_Globals.Pan!=0) Pan = (ch->Pan+m_Globals.Pan)/2.0f; // average
-			else Pan = ch->Pan; // just channel pan
-				
-			Pan = 0.5f+Pan/2.0f; // 0 -> 1
-			float Left = Pan;		
-			float Right = 1-Pan;
-					
-			float rev = 0;
-			if (Speed < 0)
-				{
-				m_Reverse = true;
-				Speed *= -1;
-				}
-			if (m_Reverse) rev = sample->GetLength();
-					
+	if (sample != NULL) //avoid lost samples
+	{					
+		unsigned int length = sample->GetLength();
+		if  (length > 0) //avoid not yet fully loaded samples as these currently get things stuck
+		{		
 			for (uint32 n=0; n<BufSize; n++)
-			{	
-				if (ch->Position<sample->GetLength()-1 && ch->Position>=0)
-				//                                  ^^ have to account for some floating point error...
+			{
+				if (m_StartTime < 0) //wait for our scheduled start
 				{
-					left.Set(n,left[n]+(*sample)[(float)fabs(ch->Position-rev)]*Volume*Left);
-					right.Set(n,right[n]+(*sample)[(float)fabs(ch->Position-rev)]*Volume*Right);
+					m_StartTime += m_SampleTime;
+					if (freq[n] < 0) m_Position = length; //this way we at least start from the correct point, should the control signal be
+					else m_Position = 0;				  //unusually erattic
 				}
-				
-				ch->Position+=Speed;
-							
-				if (ch->Position>=sample->GetLength())
+				else
 				{
-					m_ChannelMap.erase(i);
-					break;
-				}
+					m_Position += m_ChangePerHz * freq[n];
+					if (m_Position<0) m_Position = 0;                 //keeping things in range will help make the most of very heavy modulation
+					else if (m_Position>length) m_Position = length;  
+				}													   
+				out[n] = (*sample)[m_Position];						  
 			}
 		}
-		else // sample deleted, so free the channel
-		{
-			m_ChannelMap.erase(i);
-		}
-		i=nexti;
 	}
+}
+
+void Sampler::SetSampleId(int ID)
+{
+	m_SampleId = ID;
+}
+
+void Sampler::SetStartTime(float time)
+{
+	m_StartTime = time;
 }
 
 Scrubber::Scrubber(unsigned int samplerate) :
