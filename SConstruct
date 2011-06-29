@@ -60,10 +60,11 @@ else:
 
 
 if sys.platform == 'darwin' and GetOption('app'):
-		RacketCollectsLocation = 'collects/' # not used relative racket collects path and
-		DataLocation = 'Resources' 			 # data location is determined in Interpreter.cpp
-		FluxusCollectsLocation = 'collects/'
-		CollectsInstall = FluxusCollectsLocation + '/fluxus-' + FluxusVersion
+	RacketCollectsLocation = 'collects/' # not used relative racket collects path and
+	DataLocation = 'Resources' 			 # data location is determined in Interpreter.cpp
+	FluxusCollectsLocation = '#Fluxus.app/Contents/Resources/collects/'
+	CollectsInstall = FluxusCollectsLocation + '/fluxus-' + FluxusVersion
+	DataInstall = '#Fluxus.app/Contents/Resources/'
 
 # run racket to get (path->string (system-library-subpath))
 file = os.popen("racket -em \"(begin (display (path->string (system-library-subpath)))(exit))\"")
@@ -271,6 +272,8 @@ if env['PLATFORM'] == 'darwin':
 	env.Append(CCFLAGS = ' -DOS_X') # required by PLT 4.2.5
 
 	if GetOption('app') and not GetOption('clean'):
+		# make enough space for install_name_tool
+		env.Append(LINKFLAGS='-headerpad_max_install_names')
 		# replace libs with static libs if building an osx app
 		for l in ['png', 'tiff', 'GLEW', 'z', 'sndfile', 'fftw3', 'freetype', 'ode', 'jpeg']:
 			env['LIBS'].remove(l)
@@ -417,34 +420,13 @@ if env['PLATFORM'] == 'darwin' and GetOption('app'):
             frameworks += [RacketLib + '/Racket.framework']
         dylibs = [ '%s/lib/liblo.dylib' % Prefix]
 
-        resources = [['modules/material/fonts/', 'material/fonts/'],
-           ['modules/material/meshes/', 'material/meshes/'],
-           ['modules/material/shaders/', 'material/shaders/'],
-           ['modules/material/textures/', 'material/textures/'],
-           ['modules/scheme/', CollectsInstall],
-           ['modules/fluxus-engine/fluxus-engine_ss.dylib',
-             BinaryModulesLocation + '/fluxus-engine_ss.dylib'],
-           ['modules/fluxus-audio/fluxus-audio_ss.dylib',
-             BinaryModulesLocation + '/fluxus-audio_ss.dylib'],
-           ['modules/fluxus-midi/fluxus-midi_ss.dylib',
-             BinaryModulesLocation + '/fluxus-midi_ss.dylib'],
-           ['modules/fluxus-osc/fluxus-osc_ss.dylib',
-             BinaryModulesLocation + '/fluxus-osc_ss.dylib'],
-           ['modules/fluxus-openal/fluxus-openal_ss.dylib',
-             BinaryModulesLocation + '/fluxus-openal_ss.dylib']]
-        if addons:
-            resources += [['addons/video/fluxus-video_ss.dylib',
-                           BinaryModulesLocation + '/fluxus-video_ss.dylib'],
-                         ['addons/artkp/fluxus-artkp_ss.dylib',
-                           BinaryModulesLocation + '/fluxus-artkp_ss.dylib']]
-
         env.Alias('app', env.MakeBundle('Fluxus.app',
                                         Target,
                                         'key',
                                         'packages/macos/fluxus-Info.plist',
                                         dylibs = dylibs,
                                         frameworks = frameworks,
-                                        resources = resources,
+                                        resources = [],
                                         typecode = 'APPL',
                                         icon_file = 'packages/macos/fluxus.icns'))
         env.Clean('Fluxus.app', 'Fluxus.app')

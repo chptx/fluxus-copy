@@ -833,12 +833,15 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				m_Text.insert(m_Position, L"\x3bb");
 				m_Position++;
 				break;
+			default:
+				goto handle_keys;
+				break;
 		}
 	}
 	else
 	{
 		if (key!=0)
-		{	
+		{
 			switch(key)
 			{
 				case GLEDITOR_DELETE:  // delete
@@ -862,16 +865,17 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				{
 					if (!m_Text.empty() )
 					{
-						if (m_Selection) 
+						if (m_Selection)
 						{
 							m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart); 
 							m_Position=m_HighlightStart;						
+
 							m_Selection=false;
 						}
 						else if ( m_Position!=0 )
 						{
-							m_Text.erase(m_Position-1,1); 
-							m_Position--; 
+							m_Text.erase(m_Position-1,1);
+							m_Position--;
 						}
 					}
 				}
@@ -890,47 +894,52 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				break;
 				//case 172: break; // ignore ¬
 				//case 163: break; // ignore £
-				case 27: // esc - no GLUT_KEY_ESCAPE? 
+				case 27: // esc - no GLUT_KEY_ESCAPE?
 				{
 					// panic editor reset :)
 				    m_Position=0;
 				    m_TopTextPosition=0;
-		    		}
+
+				}
+
 				break;
 				case GLEDITOR_RETURN: 
 					key='\n'; // fallthrough (replacement of newline)
 				default:
+
+handle_keys:
 				if (m_Selection)
 				{
 					m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart);
 					m_Position=m_HighlightStart;
 					m_Selection=false;
-				}                                       
+				} 
 
-				if (m_FirstUTF8Byte)
-				{
-					string temp("  ");
-					temp[0]=m_FirstUTF8Byte;
-					temp[1]=key;
-					m_Text.insert(m_Position,string_to_wstring(temp));
-					m_FirstUTF8Byte=0;
-				}
-				else
-				{
-					if (key<0x80)
-					{
-					    string temp(" ");
-					    temp[0]=key;
-					    m_Text.insert(m_Position,string_to_wstring(temp));
-					}
-					else
-					{
-					    wchar_t k[2];
-					    memset(&k,0,sizeof(wchar_t)*2);
-					    k[0]=key;
-					    m_Text.insert(m_Position,wstring(k));
-					}
-				}
+                    if (m_FirstUTF8Byte)
+                    {
+                        string temp("  ");
+                        temp[0]=m_FirstUTF8Byte;
+                        temp[1]=key;
+                        m_Text.insert(m_Position,string_to_wstring(temp));
+                        m_FirstUTF8Byte=0;
+                    }
+                    else
+                    {
+                        if (key<0x80)
+                        {
+                            string temp(" ");
+                            temp[0]=key;
+                            m_Text.insert(m_Position,string_to_wstring(temp));
+                        }
+                        else
+                        {
+                            wchar_t k[2];
+                            memset(&k,0,sizeof(wchar_t)*2);
+                            k[0]=key;
+                            m_Text.insert(m_Position,wstring(k));
+                        }
+                    }
+
 
 					//char temp[2];
 					//temp[0]=(char)key;
