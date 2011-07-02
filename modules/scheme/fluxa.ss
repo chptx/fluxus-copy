@@ -1090,7 +1090,7 @@
 (define (note n)
 	(if (not (number? n))
     	(raise-type-error 'note "number" n)
-  		(list-ref scale-lut (modulo (inter flx-scale n) (length scale-lut)))))
+  		(list-ref scale-lut (modulo (inter flx-scale (inexact->exact (round n))) (length scale-lut)))))
 
 ;; StartFunctionDoc-en
 ;; reset
