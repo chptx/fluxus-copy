@@ -136,6 +136,19 @@ private:
 	Type m_Type;
 };
 
+class ScaleNode : public GraphNode
+{
+public:
+	enum Type{BITOUNI,UNITOBI,RECT,FULLRECT};
+
+	ScaleNode(Type t);
+	virtual void Trigger(float time);
+	virtual void Process(unsigned int bufsize);
+	
+private:
+	Type m_Type;
+};
+
 class FilterNode : public GraphNode
 {
 public:

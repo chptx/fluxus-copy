@@ -22,7 +22,7 @@
 		sine saw tri squ white pink adsr add sub mul div pow mooglp moogbp mooghp formant sample
 		crush distort klip echo ks xfade s&h t&h ramp deltrig lfo-sine lfo-saw lfo-revsaw lfo-tri 
 		lfo-squ kas-filter scrub load zmod sync-tempo sync-clock fluxa-init fluxa-debug set-global-offset set-bpm-mult 
-		logical-time inter pick set-scale)
+		logical-time inter pick set-scale bi->uni uni->bi rect full-rect)
 
 (define time-offset 0.0)
 (define sync-offset 0.0)
@@ -36,7 +36,8 @@
 (define DISTORT 19) (define CLIP 20) (define ECHO 21) (define KS 22) (define XFADE 23)
 (define SAMPNHOLD 24) (define TRACKNHOLD 25) (define RAMP 26) (define DELTRIG 27)
 (define LFOSIN 28) (define LFOSAW 29) (define LFOREVSAW 30) (define LFOTRI 31)
-(define LFOSQU 32) (define KASF 33) (define SCRUB 34)
+(define LFOSQU 32) (define KASF 33) (define SCRUB 34) (define BITOUNI 35) (define UNITOBI 36)
+(define RECT 37) (define FULLRECT 38)
 
 (define (fluxa-init)
   (osc-destination "osc.udp://127.0.0.1:4004")
@@ -828,6 +829,64 @@
 		(else (operator SCRUB (list (get-sample-id filename) freq)))))
 
 ;; StartFunctionDoc-en
+;; bi->uni input-node
+;; Returns: node-id-number
+;; Description:
+;; Bipolar to unipolar converter. Converts a signal that ranges from -1 to 1 to one that ranges from 0 to 1
+;; especially useful to control a single cycle waveform in scrub using a saw 
+;; Example:
+;; (play-now (scrub "sample.wav" (bi->uni (saw 10))))
+;; EndFunctionDoc
+  
+(define (bi->uni in)
+	(cond
+		((not (or (number? in) (node? in))) (raise-type-error 'bi->uni "number-or-node" 0 in))
+		(else (operator BITOUNI (list in)))))
+
+;; StartFunctionDoc-en
+;; uni->bi input-node
+;; Returns: node-id-number
+;; Description:
+;; Unipolar to bipolar converter. Converts a signal that ranges from 0 to 1 to one that ranges from -1 to 1
+;; Example:
+;; (play-now (uni->bi (distort (bi->uni (sine 300)).8)))
+;; EndFunctionDoc
+  
+(define (uni->bi in)
+	(cond
+		((not (or (number? in) (node? in))) (raise-type-error 'uni->bi "number-or-node" 0 in))
+		(else (operator UNITOBI (list in)))))
+
+;; StartFunctionDoc-en
+;; rect input-node
+;; Returns: node-id-number
+;; Description:
+;; Wave rectifier. Blocks the negative component of a bipolar signal.
+;; Example:
+;; (play-now (sine (add 200 (mul 100 (rect (sine 1))))))
+;; EndFunctionDoc
+  
+(define (rect in)
+	(cond
+		((not (or (number? in) (node? in))) (raise-type-error 'rect "number-or-node" 0 in))
+		(else (operator RECT (list in)))))
+
+;; StartFunctionDoc-en
+;; full-rect input-node
+;; Returns: node-id-number
+;; Description:
+;; Full wave rectifier. Inverts the negative component of a bipolar signal.
+;; Example:
+;; (play-now (sine (add 200 (mul 50 (rect (sine .2))))))
+;; EndFunctionDoc
+  
+(define (full-rect in)
+	(cond
+		((not (or (number? in) (node? in))) (raise-type-error 'full-rect "number-or-node" 0 in))
+		(else (operator FULLRECT (list in)))))
+
+
+;; StartFunctionDoc-en
 ;; play time node optional-pan
 ;; Returns: void
 ;; Description:
@@ -1090,7 +1149,7 @@
 (define (note n)
 	(if (not (number? n))
     	(raise-type-error 'note "number" n)
-  		(list-ref scale-lut (modulo (inter flx-scale (inexact->exact (round n))) (length scale-lut)))))
+  		(list-ref scale-lut (modulo (inter flx-scale (inexact->exact (round (abs n)))) (length scale-lut)))))
 
 ;; StartFunctionDoc-en
 ;; reset

@@ -314,6 +314,91 @@ void MathNode::Process(unsigned int bufsize)
 	}	
 }
 
+ScaleNode::ScaleNode(Type t):
+GraphNode(1),
+m_Type(t)
+{
+}
+
+void ScaleNode::Trigger(float time)
+{
+	TriggerChildren(time);
+}
+
+void ScaleNode::Process(unsigned int bufsize)
+{
+	if (bufsize>(unsigned int)m_Output.GetLength())
+	{
+		m_Output.Allocate(bufsize);
+	}
+	
+	ProcessChildren(bufsize);
+	
+	if (ChildExists(0))
+	{
+		if (GetChild(0)->IsTerminal())
+		{
+			float value=0;
+			float v = GetChild(0)->GetValue();
+			
+			switch(m_Type)
+			{
+				case BITOUNI: value= (0.5f * v) + 0.5; break;
+				case UNITOBI: value= (v - 0.5f) * 2; break;
+				case RECT: 
+				{
+					if ( v < 0) value= 0;
+					else value= v;
+				}; break;
+				case FULLRECT: value=fabs(v); break;
+			};
+			
+			for (unsigned int n=0; n<bufsize; n++) m_Output[n]=value;
+		}
+		
+		else 
+		{			
+			switch(m_Type)
+			{
+				case BITOUNI:  
+				{
+					for (unsigned int n=0; n<bufsize; n++) 
+					{
+						m_Output[n]= (0.5f * GetChild(0)->GetOutput()[n]) + 0.5f; 				
+					}
+					
+				} break;
+				case UNITOBI: 
+				{
+					for (unsigned int n=0; n<bufsize; n++) 
+					{
+						m_Output[n]=(GetChild(0)->GetOutput()[n] - 0.5f) * 2; 
+					}
+				} break;
+				case RECT: 
+				{
+					for (unsigned int n=0; n<bufsize; n++) 
+					{
+						if (GetChild(0)->GetOutput()[n] < 0) m_Output[n]=0; 
+						else m_Output[n]=GetChild(0)->GetOutput()[n]; 
+					}
+				} break;
+				case FULLRECT: 
+				{
+					for (unsigned int n=0; n<bufsize; n++) 
+					{
+					
+						m_Output[n]=fabs( GetChild(0)->GetOutput()[n]);
+					}
+				}
+				break;
+			};
+		}
+	}	
+}
+
+
+
 FilterNode::FilterNode(Type t, unsigned int samplerate):
 GraphNode(3),
 m_Type(t),
