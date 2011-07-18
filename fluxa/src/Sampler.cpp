@@ -21,7 +21,6 @@
 #include "SampleStore.h"
 #include "AsyncSampleLoader.h"
 
-static const unsigned int SAFETY_MAX_CHANNELS=30;
 
 Sampler::Sampler(unsigned int samplerate) :
 m_SampleRate(samplerate),
@@ -59,10 +58,10 @@ void Sampler::Process(uint32 BufSize, Sample &out, float freq)
 				else
 				{
 					m_Position += speed;
-					if (m_Position<0) m_Position = 0;                 //by keeping things in range and always basing the output on the file
-					else if (m_Position>length) m_Position = length;  //instead of returning 0, we make sure a adsr can always avoid clicks caused by
-				}													  //any DC offset the file may have. This shouldn't cost more as we need those 
-				out[n] = (*sample)[m_Position];						  //conditions anyway.
+					if (m_Position<0) m_Position = 0;
+				}
+				if (m_Position>length) out[n]=0;
+				else out[n] = (*sample)[m_Position];						  
 			}
 		}
 	}
