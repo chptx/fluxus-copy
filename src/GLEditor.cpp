@@ -770,9 +770,25 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 		}
 	}
 	else
+	if (mod&GLUT_ACTIVE_ALT)
 	{
+		switch(key)
+		{
+			// alt+l = lambda
+			case 'l':
+				m_Text.insert(m_Position, L"\x3bb");
+				m_Position++;
+				break;
+			default:
+				goto handle_keys;
+				break;
+		}
+	}
+	else
+	{
+handle_keys:
 		if (key!=0)
-		{	
+		{
 			switch(key)
 			{
 				case GLEDITOR_DELETE: m_Text.erase(m_Position,1); break; // delete
@@ -780,19 +796,19 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				{
 					if (!m_Text.empty() && m_Position!=0)
 					{
-						if (m_Selection) 
+						if (m_Selection)
 						{
-							m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart); 
-							if (m_Position>=m_HighlightEnd) 
+							m_Text.erase(m_HighlightStart,m_HighlightEnd-m_HighlightStart);
+							if (m_Position>=m_HighlightEnd)
 							{
 								m_Position-=m_HighlightEnd-m_HighlightStart;
-							}						
+							}
 							m_Selection=false;
 						}
 						else
 						{
-							m_Text.erase(m_Position-1,1); 
-							m_Position--; 
+							m_Text.erase(m_Position-1,1);
+							m_Position--;
 						}
 					}
 				}
@@ -805,12 +821,12 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
 				break;
 				//case 172: break; // ignore ¬
 				//case 163: break; // ignore £
-				case 27: // esc - no GLUT_KEY_ESCAPE? 
+				case 27: // esc - no GLUT_KEY_ESCAPE?
 				{
 					// panic editor reset :)
 				    m_Position=0;
 				    m_TopTextPosition=0;
-		    	}
+				}
 				break;
 				case GLEDITOR_RETURN: 
 					key='\n'; // fallthrough (replacement of newline)
@@ -823,7 +839,7 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
                             m_Position-=m_HighlightEnd-m_HighlightStart;
                         }
                         m_Selection=false;
-                    }                                       
+                    }
 
                     if (m_FirstUTF8Byte)
                     {
@@ -857,7 +873,7 @@ void GLEditor::Handle(int button, int key, int special, int state, int x, int y,
                     //m_Text.insert(m_Position,key);
 
 					m_Position++;
-					if (key=='\n' && m_Position>=m_BottomTextPosition && m_LineCount+1>=m_VisibleLines) 
+					if (key=='\n' && m_Position>=m_BottomTextPosition && m_LineCount+1>=m_VisibleLines)
 					{
 						m_TopTextPosition=LineEnd(m_TopTextPosition)+1;
 					}

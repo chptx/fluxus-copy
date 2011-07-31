@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <assert.h>
 
 #include "GLSLShader.h"
 #include "Trace.h"
@@ -302,8 +303,20 @@ void GLSLShader::SetVector(const string &name, dVector s, int size /* = 4 */)
 		case 4:
 			glUniform4f(param, s.x, s.y, s.z, s.w);
 			break;
+		default:
+			assert(false);
+			break;
 	}
-	CHECK_GL_ERRORS("glUniform");
+	#endif
+}
+
+void GLSLShader::SetMatrix(const string &name, dMatrix &m)
+{
+	#ifdef GLSL
+	if (!m_Enabled) return;
+
+	GLuint param = glGetUniformLocation(m_Program, name.c_str());
+	glUniformMatrix4fv(param, 1, GL_FALSE, m.arr());
 	#endif
 }
 

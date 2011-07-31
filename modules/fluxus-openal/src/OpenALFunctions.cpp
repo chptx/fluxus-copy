@@ -29,7 +29,7 @@ FluxAudio *Audio = NULL;
 // OpenAL is a cross platform audio library designed for use in conjunction
 // with 3D applications.
 // Example:
-// EndSectionDoc 
+// EndSectionDoc
 
 // StartSectionDoc-pt
 // openal
@@ -150,10 +150,10 @@ Scheme_Object *update(int argc, Scheme_Object **argv)
 }
 
 // StartFunctionDoc-en
-// oa-play sample-id position pitch gain
-// Returns: void
+// oa-play sample-id [position] [pitch] [gain] [looping]
+// Returns: source-id-number
 // Description:
-// Plays a sample. 
+// Plays a sample.
 // Example:
 // (oa-start)
 // (define mysample (oa-load-sample (fullpath "sample.wav")))
@@ -162,7 +162,7 @@ Scheme_Object *update(int argc, Scheme_Object **argv)
 
 // StartFunctionDoc-pt
 // oa-play sampleid posição pitch gain
-// Retorna: void
+// Retorna: source-id-number
 // Descrição:
 // Toca uma amostra.
 // Exemplo:
@@ -173,23 +173,90 @@ Scheme_Object *update(int argc, Scheme_Object **argv)
 
 Scheme_Object *play(int argc, Scheme_Object **argv)
 {
-	MZ_GC_DECL_REG(4); 
-	MZ_GC_VAR_IN_REG(0, argv); 
-	MZ_GC_REG();	
-	if (!SCHEME_NUMBERP(argv[0])) scheme_wrong_type("oa-play", "number", 0, argc, argv);
-	if (!SCHEME_VECTORP(argv[1])) scheme_wrong_type("oa-play", "vector", 1, argc, argv);
-	if (!SCHEME_NUMBERP(argv[2])) scheme_wrong_type("oa-play", "number", 2, argc, argv);
-	if (!SCHEME_NUMBERP(argv[3])) scheme_wrong_type("oa-play", "number", 3, argc, argv);
+	Scheme_Object *ret = scheme_void;
 
-	if (Audio!=NULL)
+	MZ_GC_DECL_REG(2);
+	MZ_GC_VAR_IN_REG(0, argv);
+	MZ_GC_VAR_IN_REG(1, ret);
+	MZ_GC_REG();
+
+	dVector pos(0, 0, 0);
+	float pitch = 1.0;
+	float gain = 1.0;
+	bool looping = false;
+
+	if (!SCHEME_NUMBERP(argv[0])) scheme_wrong_type("oa-play", "number", 0, argc, argv);
+
+	if (argc > 1)
+	{
+		if (SCHEME_VECTORP(argv[1]) && (SCHEME_VEC_SIZE(argv[1]) == 3))
+			FloatsFromScheme(argv[1], pos.arr(), 3);
+		else
+			scheme_wrong_type("oa-play", "vector size 3", 1, argc, argv);
+	}
+
+	if (argc > 2)
+	{
+		if (!SCHEME_NUMBERP(argv[2]))
+			scheme_wrong_type("oa-play", "number", 2, argc, argv);
+		else
+			pitch = scheme_real_to_double(argv[2]);
+	}
+
+	if (argc > 3)
+	{
+		if (!SCHEME_NUMBERP(argv[3]))
+			scheme_wrong_type("oa-play", "number", 3, argc, argv);
+		else
+			gain = scheme_real_to_double(argv[3]);
+	}
+
+	if (argc > 4)
+	{
+		if (!SCHEME_BOOLP(argv[4]))
+			scheme_wrong_type("oa-play", "bool", 4, argc, argv);
+		else
+			looping = SCHEME_TRUEP(argv[4]);
+	}
+
+	if (Audio != NULL)
 	{
 		unsigned int id=(unsigned int)scheme_real_to_double(argv[0]);
-		dVector pos;
-		FloatsFromScheme(argv[1],pos.arr(),3);
-		Audio->Play(id,pos,scheme_real_to_double(argv[2]),scheme_real_to_double(argv[3]));
+		int source_id = Audio->Play(id, pos, pitch, gain, looping);
+		if (source_id >= 0)
+			ret = scheme_make_integer_value(source_id);
 	}
-	
-	MZ_GC_UNREG(); 
+
+	MZ_GC_UNREG();
+	return ret;
+}
+
+// StartFunctionDoc-en
+// oa-stop
+// Returns: void
+// Description:
+// Stops all playing samples.
+// Example:
+// (oa-start)
+// (define s (oa-load-sample (fullpath "sample.wav")))
+// (oa-play s (vector 0 0 0) 1 1 #t)
+// ; schedule a task 5 seconds from now
+// (spawn-timed-task (+ (time-now) 5)
+//     (lambda () (oa-stop)))
+// EndFunctionDoc
+
+Scheme_Object *stop(int argc, Scheme_Object **argv)
+{
+	MZ_GC_DECL_REG(1);
+	MZ_GC_VAR_IN_REG(0, argv);
+	MZ_GC_REG();
+
+	if (Audio != NULL)
+	{
+		Audio->Stop();
+	}
+
+	MZ_GC_UNREG();
 	return scheme_void;
 }
 
@@ -354,6 +421,37 @@ Scheme_Object *set_acoustics(int argc, Scheme_Object **argv)
 	return scheme_void;
 }
 
+// StartFunctionDoc-en
+// oa-set-pitch source-id-number pitch-number
+// Returns: void
+// Description:
+// Pitch shifts the playing source with the desired value, where 1.0 equals identity.
+// Each reduction by 50 percent equals a pitch shift of -12 semitones (one octave reduction).
+// Each doubling equals a pitch shift of 12 semitones (one octave increase). Zero is not a legal value.
+// Example:
+// (define s (oa-load-sample (fullpath "sample.wav")))
+// (define id (oa-play s (vector 0 0 0) 1 1 #t))
+// (every-frame
+//    (oa-set-pitch id (+ 1.1 (sin (time)))))
+// EndFunctionDoc
+
+Scheme_Object *set_pitch(int argc, Scheme_Object **argv)
+{
+	MZ_GC_DECL_REG(1);
+	MZ_GC_VAR_IN_REG(0, argv);
+	MZ_GC_REG();
+	if (!SCHEME_INTP(argv[0])) scheme_wrong_type("oa-set-pitch", "int", 0, argc, argv);
+	if (!SCHEME_NUMBERP(argv[1])) scheme_wrong_type("oa-set-pitch", "number", 1, argc, argv);
+
+	if (Audio!=NULL)
+	{
+		Audio->SetPitch(SCHEME_INT_VAL(argv[0]), scheme_real_to_double(argv[1]));
+	}
+
+	MZ_GC_UNREG();
+	return scheme_void;
+}
+
 /////////////////////
 
 Scheme_Object *scheme_reload(Scheme_Env *env)
@@ -364,14 +462,16 @@ Scheme_Object *scheme_reload(Scheme_Env *env)
 	scheme_add_global("oa-start", scheme_make_prim_w_arity(start, "oa-start", 0, 0), menv);
 	scheme_add_global("oa-load-sample", scheme_make_prim_w_arity(load_sample, "oa-load-sample", 1, 1), menv);
 	scheme_add_global("oa-update", scheme_make_prim_w_arity(update, "oa-update", 0, 0), menv);
-	scheme_add_global("oa-play", scheme_make_prim_w_arity(play, "oa-play", 4, 4), menv);
+	scheme_add_global("oa-play", scheme_make_prim_w_arity(play, "oa-play", 1, 5), menv);
+	scheme_add_global("oa-stop", scheme_make_prim_w_arity(stop, "oa-stop", 0, 0), menv);
 	scheme_add_global("oa-set-head-pos", scheme_make_prim_w_arity(set_head_pos, "oa-set-head-pos", 2, 2), menv);
 	scheme_add_global("oa-set-poly", scheme_make_prim_w_arity(set_poly, "oa-set-poly", 1, 1), menv);
 	scheme_add_global("oa-set-cull-dist", scheme_make_prim_w_arity(set_cull_dist, "oa-set-cull-dist", 1, 1), menv);
 	scheme_add_global("oa-set-acoustics", scheme_make_prim_w_arity(set_acoustics, "oa-set-acoustics", 4, 4), menv);
+	scheme_add_global("oa-set-pitch", scheme_make_prim_w_arity(set_pitch, "oa-set-pitch", 2, 2), menv);
 
-	scheme_finish_primitive_module(menv);	
-	
+	scheme_finish_primitive_module(menv);
+
 	return scheme_void;
 }
 

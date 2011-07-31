@@ -9,7 +9,7 @@
 import os, os.path, sys, commands, subprocess
 
 MajorVersion = "0"
-MinorVersion = "17"
+MinorVersion = "18"
 FluxusVersion = MajorVersion+MinorVersion
 # remember to change fluxa too...
 Target = "fluxus"
@@ -29,17 +29,22 @@ if sys.platform == 'darwin':
 	RacketPrefix = ARGUMENTS.get('RacketPrefix', RacketBin[:-5])
 	RacketInclude = ARGUMENTS.get('RacketInclude', RacketPrefix + "/include")
 	RacketLib = ARGUMENTS.get('RacketLib', RacketPrefix + "/lib")
+	RacketCollects = ARGUMENTS.get('RacketCollects', RacketPrefix + "/collects/")
 
 elif sys.platform == 'win32':
 	Prefix = ARGUMENTS.get('Prefix','c:/Program Files/Fluxus')
 	RacketPrefix = ARGUMENTS.get('RacketPrefix','c:/Program Files/Racket')
 	RacketInclude = ARGUMENTS.get('RacketInclude', RacketPrefix + "/include")
 	RacketLib = ARGUMENTS.get('RacketLib', RacketPrefix + "/lib")
+	RacketCollects = ARGUMENTS.get('RacketCollects', RacketLib + "/racket/collects/")
 else:
 	Prefix = ARGUMENTS.get('Prefix','/usr/local')
 	RacketPrefix = ARGUMENTS.get('RacketPrefix','/usr/local')
 	RacketInclude = ARGUMENTS.get('RacketInclude', RacketPrefix + "/include/racket")
 	RacketLib = ARGUMENTS.get('RacketLib', RacketPrefix + "/lib/racket")
+# dave changed for racket package which puts collects in /usr/share
+	RacketCollects = ARGUMENTS.get('RacketCollects', RacketLib + "/collects/")
+
 BinInstall = DESTDIR + Prefix + "/bin"
 
 DataLocation = Prefix + "/share/fluxus-"+FluxusVersion
@@ -51,13 +56,15 @@ DocsInstall = DESTDIR + Prefix + "/share/doc/fluxus-" + FluxusVersion
 if sys.platform == 'darwin' or sys.platform == 'win32':
         RacketCollectsLocation = ARGUMENTS.get('RacketCollects', RacketPrefix + "/collects/")
 else:
-        RacketCollectsLocation = ARGUMENTS.get('RacketCollects', RacketLib  + "/collects/")
+        RacketCollectsLocation = ARGUMENTS.get('RacketCollects', RacketCollects)
+
 
 if sys.platform == 'darwin' and GetOption('app'):
-		RacketCollectsLocation = 'collects/' # not used relative racket collects path and
-		DataLocation = 'Resources' 			 # data location is determined in Interpreter.cpp
-		FluxusCollectsLocation = 'collects/'
-		CollectsInstall = FluxusCollectsLocation + '/fluxus-' + FluxusVersion
+	RacketCollectsLocation = 'collects/' # not used relative racket collects path and
+	DataLocation = 'Resources' 			 # data location is determined in Interpreter.cpp
+	FluxusCollectsLocation = '#Fluxus.app/Contents/Resources/collects/'
+	CollectsInstall = FluxusCollectsLocation + '/fluxus-' + FluxusVersion
+	DataInstall = '#Fluxus.app/Contents/Resources/'
 
 # run racket to get (path->string (system-library-subpath))
 file = os.popen("racket -em \"(begin (display (path->string (system-library-subpath)))(exit))\"")
@@ -95,10 +102,17 @@ if env['PLATFORM'] == 'win32':
 	LibPaths += [ "/MinGW/lib" ]
 
 if env['PLATFORM'] == 'darwin':
-	IncludePaths += ['/opt/local/include', '/opt/local/include/freetype2',
-                   '/usr/X11/include', '/usr/X11/include/freetype2']
-	LibPaths += ['/usr/X11/lib']
-	if os.path.exists('/opt/local/lib'): LibPaths += ['/opt/local/lib']
+	env.Append(CCFLAGS = ' -arch i386 ')
+	env.Append(LINKFLAGS = ' -arch i386 ')
+	env.Append(FRAMEWORKPATH = '/Developer/SDKs/MacOSX10.5.sdk/System/Library/Frameworks/')
+	if os.path.exists('/opt/local/lib'):
+		# macports
+		IncludePaths += ['/opt/local/include', '/opt/local/include/freetype2']
+		LibPaths += ['/opt/local/lib']
+	else:
+		# homebrew
+		IncludePaths += ['/usr/X11/include', '/usr/X11/include/freetype2']
+		LibPaths += ['/usr/X11/lib']
 
 env.Append(CPPPATH = IncludePaths)
 env.Append(LIBPATH = LibPaths)
@@ -261,6 +275,8 @@ if env['PLATFORM'] == 'darwin':
 	env.Append(CCFLAGS = ' -DOS_X') # required by PLT 4.2.5
 
 	if GetOption('app') and not GetOption('clean'):
+		# make enough space for install_name_tool
+		env.Append(LINKFLAGS='-headerpad_max_install_names')
 		# replace libs with static libs if building an osx app
 		for l in ['png', 'tiff', 'GLEW', 'z', 'sndfile', 'fftw3', 'freetype', 'ode', 'jpeg']:
 			env['LIBS'].remove(l)
@@ -407,36 +423,13 @@ if env['PLATFORM'] == 'darwin' and GetOption('app'):
             frameworks += [RacketLib + '/Racket.framework']
         dylibs = [ '%s/lib/liblo.dylib' % Prefix]
 
-        resources = [['modules/material/fonts/', 'material/fonts/'],
-           ['modules/material/meshes/', 'material/meshes/'],
-           ['modules/material/shaders/', 'material/shaders/'],
-           ['modules/material/textures/', 'material/textures/'],
-           ['modules/scheme/', CollectsInstall],
-           ['modules/fluxus-engine/fluxus-engine_ss.dylib',
-             BinaryModulesLocation + '/fluxus-engine_ss.dylib'],
-           ['modules/fluxus-audio/fluxus-audio_ss.dylib',
-             BinaryModulesLocation + '/fluxus-audio_ss.dylib'],
-           ['modules/fluxus-midi/fluxus-midi_ss.dylib',
-             BinaryModulesLocation + '/fluxus-midi_ss.dylib'],
-           ['modules/fluxus-osc/fluxus-osc_ss.dylib',
-             BinaryModulesLocation + '/fluxus-osc_ss.dylib'],
-           ['modules/fluxus-openal/fluxus-openal_ss.dylib',
-             BinaryModulesLocation + '/fluxus-openal_ss.dylib']]
-        if addons:
-            resources += [['addons/video/fluxus-video_ss.dylib',
-                           BinaryModulesLocation + '/fluxus-video_ss.dylib'],
-                         ['addons/fluxus-sonotopy/fluxus-sonotopy_ss.dylib',
-                           BinaryModulesLocation + '/fluxus-sonotopy_ss.dylib'],
-                         ['addons/artkp/fluxus-artkp_ss.dylib',
-                           BinaryModulesLocation + '/fluxus-artkp_ss.dylib']]
-
         env.Alias('app', env.MakeBundle('Fluxus.app',
                                         Target,
                                         'key',
                                         'packages/macos/fluxus-Info.plist',
                                         dylibs = dylibs,
                                         frameworks = frameworks,
-                                        resources = resources,
+                                        resources = [],
                                         typecode = 'APPL',
                                         icon_file = 'packages/macos/fluxus.icns'))
         env.Clean('Fluxus.app', 'Fluxus.app')

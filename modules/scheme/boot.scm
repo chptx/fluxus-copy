@@ -33,7 +33,7 @@
 
 ; now require everything
 (require scheme/pretty)
-(require fluxus-017/fluxus)
+(require fluxus-018/fluxus)
 
 ; load the helpmap
 (init-help (string-append fluxus-collects-location "/" fluxus-name "/helpmap.scm"))
@@ -92,6 +92,24 @@
 (let ((screen-size (get-screen-size)))
   (fluxus-reshape-callback (inexact->exact (round (vector-ref screen-size 0)))
                            (inexact->exact (round (vector-ref screen-size 1)))))
+
+;-------------------------------------------------
+; osx app specific section
+; add collects and search path on osx
+(when (eq? (system-type) 'macosx)
+	(let* ([home-dir (path->string (find-system-path 'home-dir))]
+		[fluxus-user-dir (string-append home-dir "Documents/Fluxus/")]
+		[fluxus-user-materials (string-append fluxus-user-dir "material/")]
+		[fluxus-user-collects (string-append fluxus-user-dir "collects/")])
+
+	(set-searchpaths
+		(cons fluxus-user-materials
+			(get-searchpaths)))
+
+	(current-library-collection-paths
+		(cons
+			fluxus-user-collects
+			(current-library-collection-paths)))))
 
 ;-------------------------------------------------
 ; here is the hacking section
