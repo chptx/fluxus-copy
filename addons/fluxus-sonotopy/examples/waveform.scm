@@ -1,4 +1,4 @@
-(require fluxus-017/fluxus-sonotopy)
+(require fluxus-018/fluxus-sonotopy)
 (init-sonotopy)
 
 (waveform-window-size 0.1)

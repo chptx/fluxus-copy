@@ -1,6 +1,6 @@
 (require racket/class)
 (require racket/math)
-(require fluxus-017/fluxus-sonotopy)
+(require fluxus-018/fluxus-sonotopy)
 
 (clear)
 (init-sonotopy)
