@@ -7,11 +7,16 @@
 ; need to set some global stuff up, I know it's wrong, looking for a way around it.
 ; (how can we load the extensions before requiring the modules they contain)
 
+; NOTE:
+; Uncheck Language/Choose Language/Show Details/"Populate "compiled" directories for faster loading"
+; otherwise an error message is displayed complaining about "make-directory: cannot make directory"
+
+
 #lang racket/base
 
 (require racket/class
-         racket/gui
-         mred/mred
+         racket/gui/base
+         ;mred/mred
          "fluxus.ss"
          (prefix-in gl- sgl/sgl))
 
@@ -19,7 +24,7 @@
  (all-from-out "fluxus.ss"))
 
 (define fluxus-collects-location (path->string (car (cdr (current-library-collection-paths)))))
-(define fluxus-version "0.16")
+(define fluxus-version "0.18")
 
 (define fluxus-canvas%
   (class* canvas% ()
@@ -43,10 +48,20 @@
     
     ; mouse
     (define/override (on-event event)
-      (let* ((button (cond
-                       ((send event get-left-down) 0)
-                       ((send event get-middle-down) 1)
-                       ((send event get-right-down) 2)
+      (let* ((type (send event get-event-type))
+             (button (cond
+                       ((or (send event get-left-down)
+                            (eq? type 'left-up)
+                            (eq? type 'left-down))
+                        0)
+                       ((or (send event get-middle-down)
+                            (eq? type 'middle-down)
+                            (eq? type 'middle-up))
+                        1)
+                       ((or (send event get-right-down)
+                            (eq? type 'right-down)
+                            (eq? type 'right-up))
+                        2)
                        (else -1)))
              (state (cond 
                       ((send event button-down? 'any) 0)
