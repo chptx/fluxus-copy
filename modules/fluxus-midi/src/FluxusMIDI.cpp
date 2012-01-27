@@ -779,6 +779,97 @@ Scheme_Object *midi_set_signature(int argc, Scheme_Object **argv)
 	return scheme_void;
 }
 
+// StartFunctionDoc-en
+// midi-beat-dur
+// Returns: duration of a beat, as a fraction of a second
+// Description:
+// Gets the duration of a beat, calculated from the clock at the midi input
+// and depending on the time signature. 
+// Example:
+// (midi-beat-dur)
+// EndFunctionDoc
+
+Scheme_Object *midi_beat_dur(int argc, Scheme_Object **argv)
+{
+	Scheme_Object *ret = NULL;
+	MZ_GC_DECL_REG(1);
+	MZ_GC_VAR_IN_REG(0, ret);
+	MZ_GC_REG();
+
+	if (midilistener != NULL)
+	{
+		ret = scheme_make_float(midilistener->get_beat_dur());
+	}
+	else
+	{
+		ret = scheme_make_float(0);
+	}
+
+	MZ_GC_UNREG();
+	return ret;
+}
+
+// StartFunctionDoc-en
+// midi-beat-dur
+// Returns: duration of a bar, as a fraction of a second
+// Description:
+// Gets the duration of a bar, calculated from the clock at the midi input
+// and depending on the time signature. Has less jitter than midi-beat-dur
+// Example:
+// (midi-beat-dur)
+// EndFunctionDoc
+
+Scheme_Object *midi_bar_dur(int argc, Scheme_Object **argv)
+{
+	Scheme_Object *ret = NULL;
+	MZ_GC_DECL_REG(1);
+	MZ_GC_VAR_IN_REG(0, ret);
+	MZ_GC_REG();
+
+	if (midilistener != NULL)
+	{
+		ret = scheme_make_float(midilistener->get_bar_dur());
+	}
+	else
+	{
+		ret = scheme_make_float(0);
+	}
+
+	MZ_GC_UNREG();
+	return ret;
+}
+
+// StartFunctionDoc-en
+// midi-last-beat-time
+// Returns: time of the last midi beat
+// Description:
+// Gets the time of the last midi beat "beat", where the time signature sets what a "beat" is
+// Example:
+// (midi-last-beat-time)
+// EndFunctionDoc
+
+Scheme_Object *midi_last_beat_time(int argc, Scheme_Object **argv)
+{
+	Scheme_Object *ret = NULL;
+	MZ_GC_DECL_REG(1);
+	MZ_GC_VAR_IN_REG(0, ret);
+	MZ_GC_REG();
+
+	if (midilistener != NULL)
+	{
+		ret = scheme_make_float(midilistener->get_last_beat_time());
+	}
+	else
+	{
+		ret = scheme_make_float(0);
+	}
+
+	MZ_GC_UNREG();
+	return ret;
+}
+
+
+
 #ifdef STATIC_LINK
 Scheme_Object *midi_scheme_reload(Scheme_Env *env)
 #else
@@ -837,6 +928,15 @@ Scheme_Object *scheme_reload(Scheme_Env *env)
 
 	scheme_add_global("midi-set-signature",
 			scheme_make_prim_w_arity(midi_set_signature, "midi-set-signature", 2, 2), menv);
+
+	scheme_add_global("midi-beat-dur",
+			scheme_make_prim_w_arity(midi_beat_dur, "midi-beat-dur", 0, 0), menv);
+
+	scheme_add_global("midi-bar-dur",
+			scheme_make_prim_w_arity(midi_bar_dur, "midi-bar-dur", 0, 0), menv);
+			
+	scheme_add_global("midi-last-beat-time",
+			scheme_make_prim_w_arity(midi_last_beat_time, "midi-last-beat-time", 0, 0), menv);
 
 	scheme_finish_primitive_module(menv);
 	MZ_GC_UNREG();

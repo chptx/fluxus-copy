@@ -52,6 +52,9 @@ void midi_callback(double deltatime, vector<unsigned char> *message,
 MIDIListener::MIDIListener(int port /*= -1*/) :
 	midiin(NULL),
 	last_event(""),
+	beatdur(0),
+	bardur(0),
+	last_beat_time(0),
 	cc_encoder_mode(MIDI_CC_ABSOLUTE)
 {
 	init_midi();
@@ -408,14 +411,48 @@ int MIDIListener::get_clocks_per_beat()
 	return ret;
 }
 
+//also attempts to set the new position to something sensible
+//should be smooth for stuff like 4/4 and 8/8
+//will be messy when suddenly switching to 5/8 but that will likely be messy anyway and should now be less messy
+//--kas.
 void MIDIListener::set_signature(int upper, int lower)
 {
 	pthread_mutex_lock(&mutex);
 	beats_per_bar = upper;
+
+	pulse = (clocks_per_beat * beat) + pulse;
 	clocks_per_beat = (24*4)/lower;
+	beat = pulse / clocks_per_beat; 
+	pulse = pulse % clocks_per_beat;
+
 	pthread_mutex_unlock(&mutex);
-	reset_song_position();
+	//reset_song_position();
 }
+
+double MIDIListener::get_beat_dur()
+{
+	pthread_mutex_lock(&mutex);
+	double ret = beatdur;
+	pthread_mutex_unlock(&mutex);
+	return ret;
+}
+
+double MIDIListener::get_bar_dur()
+{
+	pthread_mutex_lock(&mutex);
+	double ret = bardur;
+	pthread_mutex_unlock(&mutex);
+	return ret;
+}
+
+double MIDIListener::get_last_beat_time()
+{
+	pthread_mutex_lock(&mutex);
+	double ret = last_beat_time;
+	pthread_mutex_unlock(&mutex);
+	return ret;
+}
+
 
 /**
  * Adds a new event to the event queue.
@@ -437,6 +474,11 @@ void MIDIListener::reset_song_position()
 	bar = 0;
 	beat = 0;
 	pulse = 0;
+	gettimeofday(&now_beat, 0);
+	gettimeofday(&last_beat, 0);
+	gettimeofday(&now_bar, 0);
+	gettimeofday(&last_bar, 0);
+	last_beat_time = now_beat.tv_sec + (now_beat.tv_usec / 1000000.0);
 	pthread_mutex_unlock(&mutex);
 }
 
@@ -544,10 +586,17 @@ void MIDIListener::callback(double deltatime, vector<unsigned char> *message)
 					{
 						pulse = 0;
 						++beat;
+						gettimeofday(&now_beat, 0);
+						last_beat_time = now_beat.tv_sec + (now_beat.tv_usec / 1000000.0);
+						beatdur = GetDifference(now_beat, last_beat);
+						last_beat = now_beat;
 						if(beats_per_bar==beat)
 						{
 							beat = 0;
 							++bar;
+							gettimeofday(&now_bar, 0);
+							bardur = GetDifference(now_bar, last_bar);
+							last_bar = now_bar;
 						}
 					}
 					pthread_mutex_unlock(&mutex);
@@ -596,3 +645,10 @@ void MIDIListener::callback(double deltatime, vector<unsigned char> *message)
 	}
 }
 
+double MIDIListener::GetDifference(const timeval& first, const timeval& second)
+{
+	double SecsDiff = (long)first.tv_sec-(long)second.tv_sec;
+	double SecsFrac = first.tv_usec / 1000000.0;
+	SecsFrac-=second.tv_usec / 1000000.0;
+	return SecsDiff+SecsFrac;
+}

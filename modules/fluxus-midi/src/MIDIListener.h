@@ -23,11 +23,14 @@
 #include <deque>
 
 #include "RtMidi.h"
+#include <sys/time.h>
 
 using namespace std;
 
 #define MAX_CHAN   16
 #define MAX_CNTRL (MAX_CHAN*128)
+
+
 
 class MIDINote
 {
@@ -80,6 +83,9 @@ class MIDIListener
 			int get_pulse(void);
 			int get_beats_per_bar();
 			int get_clocks_per_beat();
+			double get_beat_dur();
+			double get_bar_dur();
+			double get_last_beat_time();
 			void set_signature(int upper, int lower);
 
 			enum {
@@ -128,8 +134,18 @@ class MIDIListener
 			/* song position */
 			int bar, beat, pulse;
 			int beats_per_bar, clocks_per_beat;
+			/* timestamps for song position */
+			timeval now_beat; 
+			timeval last_beat;
+			timeval now_bar; 
+			timeval last_bar;
+			double beatdur;
+			double bardur;
+			double last_beat_time;
 
 			int cc_encoder_mode;
+			
+			double GetDifference(const timeval& first, const timeval& second);
 };
 
 #endif

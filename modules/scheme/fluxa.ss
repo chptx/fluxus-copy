@@ -518,7 +518,7 @@
 ;; (play-now (sample "helicopter.wav" 440))
 ;; EndFunctionDoc
 
-(define (sample filename freq)
+(define (sample filename [freq 440])
 	(cond
 		((not (string? filename)) (raise-type-error 'sample "string" 0 filename freq))
 		((not (or (number? freq) (node? freq))) (raise-type-error 'sample "number-or-node" 1 filename freq))
@@ -1335,8 +1335,20 @@
 (define (set-on-sync s)
   (set! on-sync s))
 
+
+;; StartFunctionDoc-en
+;; set-global-offset s
+;; Returns: void
+;; Description:
+;; Set fluxa's time offset in seconds for latency compensation
+;; Example:
+;; (set-global-offset .02)
+;; EndFunctionDoc
+
 (define (set-global-offset s)
-  (set! sync-offset s))
+  (if (not (number? s))
+	(raise-type-error 'set-global-offset "number" s)
+	(set! sync-offset s)))
 
 (define (set-bpm-mult s)
   (set! bpm-mult s))
@@ -1353,37 +1365,51 @@
   (printf "fluxa error:~a~n" n))
 
 (define (go-flux)
-  ; check for sync messages
-  (cond ((osc-msg "/sync")
-         (set! sync-tempo (* (/ 1 (* (osc 3) bpm-mult)) 60))
-         (set! bpb (osc 2))
-         (let* ((sync-time (+ sync-offset (timestamp->time (vector (osc 0) (osc 1)))))
-                (offset (calc-offset logical-time sync-time sync-tempo)))
-           (printf "time offset: ~a~n" offset)
-           (set! logical-time (+ logical-time offset))
-           (set! sync-clock 0)
-       (when on-sync (on-sync)))))
+	(let ((sync-slave #f))
+		(when (< (- (time-now) (midi-last-beat-time)) 5) (set! sync-slave #t))
+		  ; check for sync messages
+		  (cond ((osc-msg "/sync")
+					(set! sync-tempo (* (/ 1 (* (osc 3) bpm-mult)) 60))
+					(set! bpb (osc 2))
+					(let* ((sync-time (+ sync-offset (timestamp->time (vector (osc 0) (osc 1)))))
+							(offset (calc-offset logical-time sync-time sync-tempo)))
+						(printf "time offset: ~a~n" offset)
+						(set! logical-time (+ logical-time offset))
+						(set! sync-clock 0)
+						(when on-sync (on-sync))))
+				((> (midi-last-beat-time)  logical-time )
+					(begin
+						(set! logical-time (midi-last-beat-time))
+						(with-handlers ([(lambda (x) #t) fluxa-error-handler])
+							(proc 
+								(+ logical-time (midi-bar-dur) sync-offset)
+								(+ (* (midi-beats-per-bar) (vector-ref (midi-position) 0)) (vector-ref (midi-position) 1) (midi-beats-per-bar))))
+						(set! clock (+ clock 1))
+						(set! sync-clock (+ sync-clock 1)))))
 
-  (cond ((> (- (time-now) logical-time) 3)
-         (set! logical-time (time-now))))
+    
 
-  ; time for an update?
-  (cond ((> (time-now) logical-time)
-       ; todo: fall back on last thunk if there is an error
-     (with-handlers ([(lambda (x) #t) fluxa-error-handler])
-     	(let ((temp (proc (+ logical-time (* bpb tempo)) clock)))
-     		(cond 
-     			((not (number? temp)) (error "seq function should return a number!"))
-     			((negative? temp) (error "seq function should not return a negative number!"))
-           		(else (set! tempo temp)))))
-         (set! logical-time (+ logical-time tempo))
-         (set! clock (+ clock 1))
-         (set! sync-clock (+ sync-clock 1))))
+		  (when (> (- (time-now) logical-time) 3)
+				 (set! logical-time (time-now)))
+         
 
-  ; send a loadqueue request every 5 seconds
-  (cond ((> (time-now) next-load-queue)
-         (osc-send "/loadqueue" "" '())
-         (set! next-load-queue (+ next-load-queue 5)))))
+		  ; time for an update?
+		  (when (and (> (time-now) logical-time) (not sync-slave))
+			   ; todo: fall back on last thunk if there is an error
+				(with-handlers ([(lambda (x) #t) fluxa-error-handler])
+					(let ((temp (proc (+ logical-time (* bpb tempo)) clock)))
+						(cond 
+							((not (number? temp)) (error "seq function should return a number!"))
+							((negative? temp) (error "seq function should not return a negative number!"))
+							(else (set! tempo temp))))
+					(set! logical-time (+ logical-time tempo))
+					(set! clock (+ clock 1))
+					(set! sync-clock (+ sync-clock 1))))
+
+		  ; send a loadqueue request every 5 seconds
+		  (when (> (time-now) next-load-queue)
+				 (osc-send "/loadqueue" "" '())
+				 (set! next-load-queue (+ next-load-queue 5)))))
 
 (fluxa-init)
 
