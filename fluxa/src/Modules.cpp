@@ -1246,10 +1246,12 @@ void KasF::Process(unsigned int BufSize, Sample &In, Sample &CutoffCV, Sample &R
 				m_Phase-=TWOPI;
 				float interp= m_Phase / PhaseInc; //this division should be safe; PhaseInc should never be 0 at this moment
 				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); //interpolate based on how far we overshot the extreme of the wave 
+				m_StoreB = std::max (-1.0f ,  std::min ( 1.0f , m_StoreB ));
 			}
 			else if (m_Phase > PI && LastPhase < PI)	//and again for the other s&h
 			{	float interp= (m_Phase - PI) / PhaseInc;
 				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+				m_StoreA = std::max (-1.0f ,  std::min ( 1.0f , m_StoreA ));
 			}
 		}
 		float mix = cos(m_Phase);
@@ -1280,10 +1282,13 @@ void KasF::Process(unsigned int BufSize, Sample &In, Sample &CutoffCV, Sample &R
 				m_Phase-=TWOPI;
 				float interp= m_Phase / PhaseInc;
 				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+				m_StoreB = std::max (-1.0f ,  std::min ( 1.0f , m_StoreB ));
 			}
+			
 			else if (m_Phase > PI && LastPhase < PI)
 			{	float interp= (m_Phase - PI) / PhaseInc;
 				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+				m_StoreA = std::max (-1.0f ,  std::min ( 1.0f , m_StoreA ));
 			}
 		}
 		float mix = cos(m_Phase);
@@ -1316,10 +1321,13 @@ void KasF::Process(unsigned int BufSize, Sample &In, float CutoffCV, Sample &Res
 				m_Phase-=TWOPI;
 				float interp= m_Phase / PhaseInc;
 				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+				m_StoreB = std::max (-1.0f ,  std::min ( 1.0f , m_StoreB ));
 			}
+			
 			else if (m_Phase > PI && LastPhase < PI)
 			{	float interp= (m_Phase - PI) / PhaseInc;
 				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+				m_StoreA = std::max (-1.0f ,  std::min ( 1.0f , m_StoreA ));
 			}
 		}
 		float mix = cos(m_Phase);
@@ -1352,10 +1360,13 @@ void KasF::Process(unsigned int BufSize, Sample &In, float CutoffCV, Sample &Res
 				m_Phase-=TWOPI;
 				float interp= m_Phase / PhaseInc;
 				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+				m_StoreB = std::max (-1.0f ,  std::min ( 1.0f , m_StoreB ));
 			}
+			
 			else if (m_Phase > PI && LastPhase < PI)
 			{	float interp= (m_Phase - PI) / PhaseInc;
 				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+				m_StoreA = std::max (-1.0f ,  std::min ( 1.0f , m_StoreA ));
 			}
 		}
 		float mix = cos(m_Phase);
@@ -1392,6 +1403,7 @@ void KasF::Process(unsigned int BufSize, Sample &In, Sample &CutoffCV, float Res
 			else if (m_Phase > PI && LastPhase < PI)
 			{	float interp= (m_Phase - PI) / PhaseInc;
 				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+				m_StoreA = std::max (-1.0f ,  std::min ( 1.0f , m_StoreA ));
 			}
 		}
 		float mix = cos(m_Phase);
@@ -1425,10 +1437,13 @@ void KasF::Process(unsigned int BufSize, Sample &In, Sample &CutoffCV, float Res
 				m_Phase-=TWOPI;
 				float interp= m_Phase / PhaseInc;
 				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+				m_StoreB = std::max (-1.0f ,  std::min ( 1.0f , m_StoreB ));
 			}
+			
 			else if (m_Phase > PI && LastPhase < PI)
 			{	float interp= (m_Phase - PI) / PhaseInc;
 				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+				m_StoreA = std::max (-1.0f ,  std::min ( 1.0f , m_StoreA ));
 			}
 		}
 		float mix = cos(m_Phase);
@@ -1463,10 +1478,13 @@ void KasF::Process(unsigned int BufSize, Sample &In, float CutoffCV, float ResCV
 				m_Phase-=TWOPI;
 				float interp= m_Phase / PhaseInc;
 				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+				m_StoreB = std::max (-1.0f ,  std::min ( 1.0f , m_StoreB ));
 			}
+			
 			else if (m_Phase > PI && LastPhase < PI)
 			{	float interp= (m_Phase - PI) / PhaseInc;
 				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+				m_StoreA = std::max (-1.0f ,  std::min ( 1.0f , m_StoreA ));
 			}
 		}
 		float mix = cos(m_Phase);
@@ -1500,10 +1518,13 @@ void KasF::Process(unsigned int BufSize, Sample &In, float CutoffCV, float ResCV
 				m_Phase-=TWOPI;
 				float interp= m_Phase / PhaseInc;
 				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+				m_StoreB = std::max (-1.0f ,  std::min ( 1.0f , m_StoreB ));
 			}
+			
 			else if (m_Phase > PI && LastPhase < PI)
 			{	float interp= (m_Phase - PI) / PhaseInc;
 				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+				m_StoreA = std::max (-1.0f ,  std::min ( 1.0f , m_StoreA ));
 			}
 		}
 		float mix = cos(m_Phase);
