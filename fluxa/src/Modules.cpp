@@ -1239,15 +1239,18 @@ void KasF::Process(unsigned int BufSize, Sample &In, Sample &CutoffCV, Sample &R
 		float drive = fabs (DriveCV[n]);
 		if (drive > 1) drive = 1;
 
-		if (m_Phase > TWOPI) //sample the input at the exact extremes of the crosfading wave
+		if (PhaseInc > 0)
 		{
-			m_Phase-=TWOPI;
-			float interp= m_Phase / PhaseInc; //this division should be safe; PhaseInc should never be 0 at this moment
-			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); //interpolate based on how far we overshot the extreme of the wave 
-		}
-		else if (m_Phase > PI && LastPhase < PI)	//and again for the other s&h
-		{	float interp= (m_Phase - PI) / PhaseInc;
-			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			if (m_Phase > TWOPI) //sample the input at the exact extremes of the crosfading wave
+			{
+				m_Phase-=TWOPI;
+				float interp= m_Phase / PhaseInc; //this division should be safe; PhaseInc should never be 0 at this moment
+				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); //interpolate based on how far we overshot the extreme of the wave 
+			}
+			else if (m_Phase > PI && LastPhase < PI)	//and again for the other s&h
+			{	float interp= (m_Phase - PI) / PhaseInc;
+				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			}
 		}
 		float mix = cos(m_Phase);
 		float absmix = fabs(mix);
@@ -1270,15 +1273,18 @@ void KasF::Process(unsigned int BufSize, Sample &In, Sample &CutoffCV, Sample &R
 		m_Phase+= PhaseInc;
 		float FeedBack = -1 * fabs(ResCV[n]);
 		if (FeedBack < -0.95) FeedBack = -0.95;
-		if (m_Phase > TWOPI)
+		if (PhaseInc > 0)
 		{
-			m_Phase-=TWOPI;
-			float interp= m_Phase / PhaseInc;
-			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
-		}
-		else if (m_Phase > PI && LastPhase < PI)
-		{	float interp= (m_Phase - PI) / PhaseInc;
-			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			if (m_Phase > TWOPI)
+			{
+				m_Phase-=TWOPI;
+				float interp= m_Phase / PhaseInc;
+				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+			}
+			else if (m_Phase > PI && LastPhase < PI)
+			{	float interp= (m_Phase - PI) / PhaseInc;
+				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			}
 		}
 		float mix = cos(m_Phase);
 		float absmix = fabs(mix);
@@ -1303,15 +1309,18 @@ void KasF::Process(unsigned int BufSize, Sample &In, float CutoffCV, Sample &Res
 		float drive = fabs (DriveCV[n]);
 		if (drive > 1) drive = 1;
 
-		if (m_Phase > TWOPI)
+		if (PhaseInc > 0)
 		{
-			m_Phase-=TWOPI;
-			float interp= m_Phase / PhaseInc;
-			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
-		}
-		else if (m_Phase > PI && LastPhase < PI)
-		{	float interp= (m_Phase - PI) / PhaseInc;
-			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			if (m_Phase > TWOPI)
+			{
+				m_Phase-=TWOPI;
+				float interp= m_Phase / PhaseInc;
+				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+			}
+			else if (m_Phase > PI && LastPhase < PI)
+			{	float interp= (m_Phase - PI) / PhaseInc;
+				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			}
 		}
 		float mix = cos(m_Phase);
 		float absmix = fabs(mix);
@@ -1336,15 +1345,18 @@ void KasF::Process(unsigned int BufSize, Sample &In, float CutoffCV, Sample &Res
 		m_Phase+= PhaseInc;
 		float FeedBack = -1 * fabs(ResCV[n]);
 		if (FeedBack < -0.95) FeedBack = -0.95;
-		if (m_Phase > TWOPI)
+		if (PhaseInc > 0)
 		{
-			m_Phase-=TWOPI;
-			float interp= m_Phase / PhaseInc;
-			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
-		}
-		else if (m_Phase > PI && LastPhase < PI)
-		{	float interp= (m_Phase - PI) / PhaseInc;
-			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			if (m_Phase > TWOPI)
+			{
+				m_Phase-=TWOPI;
+				float interp= m_Phase / PhaseInc;
+				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+			}
+			else if (m_Phase > PI && LastPhase < PI)
+			{	float interp= (m_Phase - PI) / PhaseInc;
+				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			}
 		}
 		float mix = cos(m_Phase);
 		float absmix = fabs(mix);
@@ -1369,15 +1381,18 @@ void KasF::Process(unsigned int BufSize, Sample &In, Sample &CutoffCV, float Res
 		float PhaseInc=m_PhasePerSample * fabs(CutoffCV[n]);
 		m_Phase+= PhaseInc;
 	
-		if (m_Phase > TWOPI)
+		if (PhaseInc > 0)
 		{
-			m_Phase-=TWOPI;
-			float interp= m_Phase / PhaseInc;
-			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
-		}
-		else if (m_Phase > PI && LastPhase < PI)
-		{	float interp= (m_Phase - PI) / PhaseInc;
-			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			if (m_Phase > TWOPI)
+			{
+				m_Phase-=TWOPI;
+				float interp= m_Phase / PhaseInc;
+				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+			}
+			else if (m_Phase > PI && LastPhase < PI)
+			{	float interp= (m_Phase - PI) / PhaseInc;
+				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			}
 		}
 		float mix = cos(m_Phase);
 		float absmix = fabs(mix);
@@ -1403,15 +1418,18 @@ void KasF::Process(unsigned int BufSize, Sample &In, Sample &CutoffCV, float Res
 		float PhaseInc=m_PhasePerSample * fabs(CutoffCV[n]);
 		m_Phase+= PhaseInc;
 	
-		if (m_Phase > TWOPI)
+		if (PhaseInc > 0)
 		{
-			m_Phase-=TWOPI;
-			float interp= m_Phase / PhaseInc;
-			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
-		}
-		else if (m_Phase > PI && LastPhase < PI)
-		{	float interp= (m_Phase - PI) / PhaseInc;
-			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			if (m_Phase > TWOPI)
+			{
+				m_Phase-=TWOPI;
+				float interp= m_Phase / PhaseInc;
+				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+			}
+			else if (m_Phase > PI && LastPhase < PI)
+			{	float interp= (m_Phase - PI) / PhaseInc;
+				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			}
 		}
 		float mix = cos(m_Phase);
 		float absmix = fabs(mix);
@@ -1438,15 +1456,18 @@ void KasF::Process(unsigned int BufSize, Sample &In, float CutoffCV, float ResCV
 		float LastPhase=m_Phase;
 		m_Phase+= PhaseInc;
 	
-		if (m_Phase > TWOPI)
+		if (PhaseInc > 0)
 		{
-			m_Phase-=TWOPI;
-			float interp= m_Phase / PhaseInc;
-			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
-		}
-		else if (m_Phase > PI && LastPhase < PI)
-		{	float interp= (m_Phase - PI) / PhaseInc;
-			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			if (m_Phase > TWOPI)
+			{
+				m_Phase-=TWOPI;
+				float interp= m_Phase / PhaseInc;
+				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+			}
+			else if (m_Phase > PI && LastPhase < PI)
+			{	float interp= (m_Phase - PI) / PhaseInc;
+				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			}
 		}
 		float mix = cos(m_Phase);
 		float absmix = fabs(mix);
@@ -1472,15 +1493,18 @@ void KasF::Process(unsigned int BufSize, Sample &In, float CutoffCV, float ResCV
 		float LastPhase=m_Phase;
 		m_Phase+= PhaseInc;
 	
-		if (m_Phase > TWOPI)
+		if (PhaseInc > 0)
 		{
-			m_Phase-=TWOPI;
-			float interp= m_Phase / PhaseInc;
-			m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
-		}
-		else if (m_Phase > PI && LastPhase < PI)
-		{	float interp= (m_Phase - PI) / PhaseInc;
-			m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			if (m_Phase > TWOPI)
+			{
+				m_Phase-=TWOPI;
+				float interp= m_Phase / PhaseInc;
+				m_StoreB=( In[n] * interp) + (m_LastIn * (1 - interp))  + (FeedBack * m_StoreA); 
+			}
+			else if (m_Phase > PI && LastPhase < PI)
+			{	float interp= (m_Phase - PI) / PhaseInc;
+				m_StoreA=( In[n] * interp) + (m_LastIn * (1 - interp)) + (FeedBack * m_StoreB); 
+			}
 		}
 		float mix = cos(m_Phase);
 		float absmix = fabs(mix);
