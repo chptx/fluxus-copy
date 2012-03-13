@@ -1108,7 +1108,7 @@
 ;; Release; time to get back to unity gain in ms.
 ;; Threshold; amplitude (between 0 and 1) above which compression occurs.
 ;; Slope; ratio at which to compress. 1 is no compression, values over 10 mean a limiter.
-;; The optional "boost" boosts signals below the treshold, 1 means no boost (default), 
+;; The optional "boost" boosts signals below the threshold, 1 means no boost (default), 
 ;; a little goes a long way there.
 ;; Example:
 ;; (comp 0.1 0.1 0.5 3)
