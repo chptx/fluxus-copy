@@ -57,7 +57,8 @@ private:
 	
 	Eq m_LeftEq;
     Eq m_RightEq;
-	Compressor m_Comp;
+	Compressor m_LeftComp;
+	Compressor m_RightComp;
 };
 
 #endif

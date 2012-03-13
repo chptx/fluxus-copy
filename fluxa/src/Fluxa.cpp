@@ -33,7 +33,8 @@ m_Pan(0.0f),
 m_Debug(false),
 m_LeftEq(jack->GetSamplerate()),
 m_RightEq(jack->GetSamplerate()),
-m_Comp(jack->GetSamplerate())
+m_LeftComp(jack->GetSamplerate()),
+m_RightComp(jack->GetSamplerate())
 {		
 	WaveTable::WriteWaves();
  	jack->SetCallback(Run,(void*)this);
@@ -199,10 +200,16 @@ void Fluxa::ProcessCommands()
 		}
 		else if (name=="/comp")	
 		{ 		
-			m_Comp.SetAttack(cmd.GetFloat(0));
-			m_Comp.SetRelease(cmd.GetFloat(1));
-			m_Comp.SetThreshold(cmd.GetFloat(2));
-			m_Comp.SetSlope(cmd.GetFloat(3));
+			m_LeftComp.SetAttack(cmd.GetFloat(0));
+			m_LeftComp.SetRelease(cmd.GetFloat(1));
+			m_LeftComp.SetThreshold(cmd.GetFloat(2));
+			m_LeftComp.SetSlope(cmd.GetFloat(3));
+			m_LeftComp.SetBoost(cmd.GetFloat(4));
+			m_RightComp.SetAttack(cmd.GetFloat(0));
+			m_RightComp.SetRelease(cmd.GetFloat(1));
+			m_RightComp.SetThreshold(cmd.GetFloat(2));
+			m_RightComp.SetSlope(cmd.GetFloat(3));
+			m_RightComp.SetBoost(cmd.GetFloat(4));
 		}
 		else if (name=="/addtoqueue")
 		{
@@ -275,7 +282,8 @@ void Fluxa::Process(unsigned int BufSize)
 	m_Graph.Process(BufSize,m_LeftBuffer,m_RightBuffer);
 	m_LeftEq.Process(BufSize,m_LeftBuffer);
 	m_RightEq.Process(BufSize,m_RightBuffer);
-	//m_Comp.Process(BufSize,m_LeftBuffer);
+	m_LeftComp.Process(BufSize,m_LeftBuffer);
+	m_RightComp.Process(BufSize,m_RightBuffer);
 		
 	// panning
 	float leftpan=1,rightpan=1;

@@ -366,20 +366,22 @@ public:
 	
 	virtual void Process(unsigned int BufSize, Sample &In);
 
-	void SetAttack(float s) { tatt=s*1e-3; }
-	void SetRelease(float s) { trel=s*1e-3; }
-	void SetThreshold(float s) { threshold=s; }
-	void SetSlope(float s) { slope=s; }
+	void SetAttack(float s) { 1.0 - exp( -2.2 / (fabs( s ) * sr) ); } //s is in seconds. compensate for samplerate, pre-calculate exp
+	void SetRelease(float s) { 1.0 - exp( -2.2 / (fabs( s ) * sr) ); }
+	void SetThreshold(float s) { threshold = s; }
+	void SetSlope(float s) { slopeAbove = 1.0 / max(1.0f, s);} //ratio between 0 and 1 would result in a expander, also prevent /0
+	void SetBoost(float s) { slopeBelow = 1.0 / max(1.0f, s);} //ratio between 0 and 1 would result in a noise-gate, also prevent /0
 	
 protected:
 
-	float threshold;  // threshold (percents)    
-	float slope;      // slope angle (percents)
+	float threshold;  // threshold (absolute value)
+	float slopeAbove; // slope angle above treshold (one divided by the ratio)
+	float slopeBelow; // slope angle below treshold
     int   sr;         // sample rate (smp/sec)
-    float tla;        // lookahead  (ms)
-    float twnd;       // window time (ms)
-    float tatt;       // attack time  (ms)
-    float trel;       // release time (ms)
+    float tatt;       // attack time see calculation above
+    float trel;       // release time 
+	
+    float env;       // envelope
 };
 
 class KS : public Module

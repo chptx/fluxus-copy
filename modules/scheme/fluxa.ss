@@ -1077,6 +1077,7 @@
 ;; Returns: void
 ;; Description:
 ;; Sets a simple global equaliser. This is more as a last resort when performing without a mixer.
+;; Note that the equaliser comes before the compressor
 ;; Example:
 ;; (eq 2 1 0.5) ; bass boost
 ;; EndFunctionDoc
@@ -1099,10 +1100,16 @@
   		(else (osc-send "/eq" "fff" (list l m h)))))
 
 ;; StartFunctionDoc-en
-;; comp attack-number release-number threshold-number slope-number
+;; comp attack-number release-number threshold-number slope-number optional-boost-number
 ;; Returns: void
 ;; Description:
-;; A global compressor. Not sure if this works yet.
+;; A global compressor. 
+;; Attack; time to get to max compression in ms.
+;; Release; time to get back to unity gain in ms.
+;; Threshold; amplitude (between 0 and 1) above which compression occurs.
+;; Slope; ratio at which to compress. 1 is no compression, values over 10 mean a limiter.
+;; The optional "boost" boosts signals below the treshold, 1 means no boost (default), 
+;; a little goes a long way there.
 ;; Example:
 ;; (comp 0.1 0.1 0.5 3)
 ;; EndFunctionDoc
@@ -1116,13 +1123,14 @@
 ;; (comp 0.1 0.1 0.5 3)
 ;; EndFunctionDoc
 
-(define (comp a r t s)
+(define (comp a r t s [b 1])
 	(cond
 		((not (number? a)) (raise-type-error 'comp "number" 0 a r t s))
 		((not (number? r)) (raise-type-error 'comp "number" 1 a r t s))
 		((not (number? t)) (raise-type-error 'comp "number" 2 a r t s))
 		((not (number? s)) (raise-type-error 'comp "number" 3 a r t s))
-  		(else (osc-send "/comp" "ffff" (list a r t s)))))
+		((not (number? b)) (raise-type-error 'comp "number" 4 a r t s))
+  		(else (osc-send "/comp" "fffff" (list a r t s b)))))
 
 
 ;; StartFunctionDoc-en
@@ -1417,7 +1425,7 @@
 ;; Example:
 ;; (set-base-keynum 60)
 ;; EndFunctionDoc
-;;
+
 (define *diapason-key* 60)
 
 (define (set-base-keynum n)

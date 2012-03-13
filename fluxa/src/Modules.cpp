@@ -1073,72 +1073,47 @@ void Eq::Process(unsigned int BufSize, Sample &In)
 		In[n]=(l + m + h);
 	}
 }
-
-// Type : Hardknee compressor with RMS look-ahead envelope calculation and adjustable attack/decay
-// References : Posted by flashinc[AT]mail[DOT]ru
-//
-// Notes :
-// RMS is a true way to estimate _musical_ signal energy,
-// our ears behaves in a same way.
+//compressor structure from the ChucK source (ugen_xxx.cpp)
+//original implementation (c) by Matt Hoffman + Graham Coleman
+//licensed under the GPLv2
+//adapted for fluxa, without the original side-chaining functionality by Kassen Oud.
+//Notice; it'd be good to keep a eye on the original and borrow the soft-nee once they get round to it.
 
 Compressor::Compressor(int SampleRate) :
 Module(SampleRate),
-threshold(0.5),  
-slope(0.5),      
-sr(SampleRate),    
-tla(1.0f*1e-3),         
-twnd(3.0f*1e-3),        
-tatt(0.1f*1e-3),        
-trel(300.0f*1e-3)        
+threshold(0.5),
+slopeAbove(.333),
+slopeBelow(1.0),
+sr(SampleRate),
+tatt(1.0 - exp( -2.2 / (0.1 * sr) )),
+trel(1.0 - exp( -2.2 / (0.1 * sr) )),
+env(0.0)
 {
 }
 
 void Compressor::Process(unsigned int BufSize, Sample &In)
 {
-    // attack and release "per sample decay"
-    float att=(tatt == 0.0) ? (0.0) : exp (-1.0 / (sr * tatt));
-    float rel=(trel == 0.0) ? (0.0) : exp (-1.0 / (sr * trel));
-    // envelope
-    float env = 0.0;
-    // sample offset to lookahead wnd start
-    int lhsmp = (int)(sr*tla);
-    // samples count in lookahead window
-    int nrms = (int)(sr*twnd);
 
-    // for each sample...
-    for (unsigned int i=0; i<BufSize; ++i)
-    {
-        // now compute RMS
-        float summ = 0;
+	// for each sample...
+	for (unsigned int i=0; i<BufSize; ++i)
+	{
 
-        // for each sample in window
-        for (int j=0; j<nrms; ++j)
-        {
-            unsigned int lki = i + j + lhsmp;
-            float  smp;
-            if (lki < BufSize) smp = In[lki];
-            else smp = 0.0;      
-            summ += smp * smp;  // square em..
-        }
+	// 'a' is signal left after subtracting env (to recompute the envelope)
+	float a = fabs(In[i]) - env;
+	// a is only needed if positive to pull the envelope up, not to bring it down.
+	if ( a < 0 ) a = 0;
+	// the attack/release (peak) exponential filter to guess envelope
+	env = env * (1 - trel) + tatt * a;
 
-        float rms = sqrt (summ / nrms);   // root-mean-square
-        // dynamic selection: attack or release?
-        float theta = rms > env ? att : rel;
-        // smoothing with capacitor, envelope extraction...
-        // here be aware of pIV denormal numbers glitch
-        env = (1.0 - theta) * rms + theta * env;
-        // the very easy hard knee 1:N compressor
-        float  gain = 1.0;
-        if (env > threshold) gain = gain - (env - threshold) * slope;
-        // result - two hard kneed compressed channels...
-        In[i] *= gain;
-		if (i==0) cerr<<threshold<<" "<<env<<" "<<gain<<endl;
-    }
-	
-	
-	
+	// decide which slope to use, depending on whether we're below/above thresh
+	float slope = env > threshold ? slopeAbove : slopeBelow;
+	// the gain function - apply the slope chosen above
+	float f = slope == 1.0 ? 1.0 : pow( env / threshold, slope - 1.0 );
+
+	// apply the gain found above to input sample
+	In[i] *= f;
+	}
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 
