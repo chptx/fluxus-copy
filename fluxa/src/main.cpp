@@ -30,8 +30,8 @@ int main(int argc, char **argv)
 	string leftport("system:playback_1");
 	string rightport("system:playback_2");
 #else
-	string leftport("alsa_pcm:playback_1");
-	string rightport("alsa_pcm:playback_2");
+	string leftport("system:playback_1");
+	string rightport("system:playback_2");
 #endif
 	string port("4004");
 
