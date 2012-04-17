@@ -54,7 +54,9 @@ bool JackClient::Attach(const string &ClientName)
 {
         if (m_Attached) return true;
 
-        if (!(m_Client = jack_client_new(ClientName.c_str())))
+        if (!(m_Client = jack_client_open(	ClientName.c_str(),
+											JackNoStartServer,
+											NULL )))
         {
                 cerr<<"jack server not running?"<<endl;
                 return false;
