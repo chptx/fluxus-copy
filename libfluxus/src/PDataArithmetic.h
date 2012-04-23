@@ -62,6 +62,11 @@ template<>
 PData *AddOperator::Operate(TypedPData<dVector> *a, TypedPData<float> *b);
 template<>
 PData *AddOperator::Operate(TypedPData<dVector> *a, TypedPData<dVector> *b);
+template<>
+PData *AddOperator::Operate(TypedPData<dColour> *a, dVector b);
+template<>
+PData *AddOperator::Operate(TypedPData<dColour> *c, dColour d);
+
 
 class MultOperator : public PDataOperator
 {
