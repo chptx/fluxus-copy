@@ -810,13 +810,13 @@ Scheme_Object *midi_beat_dur(int argc, Scheme_Object **argv)
 }
 
 // StartFunctionDoc-en
-// midi-beat-dur
+// midi-bar-dur
 // Returns: duration of a bar, as a fraction of a second
 // Description:
 // Gets the duration of a bar, calculated from the clock at the midi input
 // and depending on the time signature. Has less jitter than midi-beat-dur
 // Example:
-// (midi-beat-dur)
+// (midi-bar-dur)
 // EndFunctionDoc
 
 Scheme_Object *midi_bar_dur(int argc, Scheme_Object **argv)
