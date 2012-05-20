@@ -52,9 +52,15 @@ void midi_callback(double deltatime, vector<unsigned char> *message,
 MIDIListener::MIDIListener(int port /*= -1*/) :
 	midiin(NULL),
 	last_event(""),
+<<<<<<< HEAD
 	beatdur(0),
 	bardur(0),
 	last_beat_time(0),
+=======
+	bar(0),
+	beat(0),
+	pulse(0),
+>>>>>>> 0b5452d23d9d3076cc37e5ca5f56aeea2c8ad894
 	cc_encoder_mode(MIDI_CC_ABSOLUTE)
 {
 	init_midi();
