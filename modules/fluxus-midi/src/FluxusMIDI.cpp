@@ -798,11 +798,11 @@ Scheme_Object *midi_beat_dur(int argc, Scheme_Object **argv)
 
 	if (midilistener != NULL)
 	{
-		ret = scheme_make_float(midilistener->get_beat_dur());
+		ret = scheme_make_double(midilistener->get_beat_dur());
 	}
 	else
 	{
-		ret = scheme_make_float(0);
+		ret = scheme_make_double(0);
 	}
 
 	MZ_GC_UNREG();
@@ -828,11 +828,11 @@ Scheme_Object *midi_bar_dur(int argc, Scheme_Object **argv)
 
 	if (midilistener != NULL)
 	{
-		ret = scheme_make_float(midilistener->get_bar_dur());
+		ret = scheme_make_double(midilistener->get_bar_dur());
 	}
 	else
 	{
-		ret = scheme_make_float(0);
+		ret = scheme_make_double(0);
 	}
 
 	MZ_GC_UNREG();
@@ -857,11 +857,11 @@ Scheme_Object *midi_last_beat_time(int argc, Scheme_Object **argv)
 
 	if (midilistener != NULL)
 	{
-		ret = scheme_make_float(midilistener->get_last_beat_time());
+		ret = scheme_make_double(midilistener->get_last_beat_time());
 	}
 	else
 	{
-		ret = scheme_make_float(0);
+		ret = scheme_make_double(0);
 	}
 
 	MZ_GC_UNREG();
