@@ -22,8 +22,8 @@
 		set-base-keynum set-scala-microtonal set-scala-interp list-scales scala-description scala-size 
 		scala-reset searchpath reset eq comp sine saw tri squ white pink adsr add sub mul div pow mooglp moogbp 
 		mooghp formant sample crush distort klip echo ks xfade s&h t&h ramp deltrig lfo-sine lfo-saw lfo-revsaw lfo-tri 
-		lfo-squ kas-filter scrub load zmod sync-tempo sync-clock fluxa-init fluxa-debug set-global-offset set-bpm-mult 
-		logical-time inter pick bi->uni uni->bi rect full-rect)
+		lfo-squ kas-filter scrub zmod sync-tempo sync-clock fluxa-init fluxa-debug set-global-offset set-bpm-mult 
+		logical-time inter pick in bi->uni uni->bi rect full-rect)
 
 (define time-offset 0.0)
 (define sync-offset 0.0)
@@ -1289,6 +1289,56 @@
     0))
 
 ;---------------------------------------
+; temporal recursion
+
+(define (make-ping t thunk)
+  (list t thunk))
+
+(define (ping-t p) (list-ref p 0))
+(define (ping-thunk p) (list-ref p 1))
+
+(define max-pings 6)
+
+(define (clip-list l c)
+  (cond
+   ((null? l) l)
+   ((zero? c) '())
+   (else (cons (car l) (clip-list (cdr l) (- c 1))))))
+  
+; (1 2 3 4) -> (0 1 2 3)
+(define (limit-cons v l max)
+  (clip-list (cons v l) max))
+
+(define (pings-add pings p)
+  (limit-cons p pings max-pings))
+
+;---------------------------------------------
+
+(define pings '())
+
+(define (pings-run t)  
+  ;;(display (length pings))(newline)
+  (for-each
+   (lambda (p)
+     (when (>= t (ping-t p)) 
+       (apply (car (ping-thunk p)) 
+              (cons 
+               (ping-t p) 
+               (cdr (ping-thunk p))))))
+   pings)
+  (set! pings 
+        (filter
+         (lambda (p)
+           (< t (ping-t p)))
+         pings)))
+
+(define (in . args)
+  (set! pings (pings-add pings 
+                         (make-ping
+                          (+ (car args) (cadr args))
+                          (cddr args)))))
+
+;---------------------------------------
 ; fluxus implementation
 
 (define logical-time (time-now))
@@ -1323,8 +1373,8 @@
 
 ; figures out the offset to the nearest tick
 (define (calc-offset timenow synctime tick)
-  (let ((p (/ (- synctime timenow) tick)))
-    (let ((f (- p (floor p))))
+  (let ((p (/ (- synctime timenow) tick))) ; difference in terms of tempo
+    (let ((f (- p (floor p))))             
       (if (< f 0.5)
           (* f tick)
           (- (* (- 1 f) tick))))))
@@ -1377,7 +1427,8 @@
 		  ; send a loadqueue request every 5 seconds
 		  (when (> (time-now) next-load-queue)
 				 (osc-send "/loadqueue" "" '())
-				 (set! next-load-queue (+ next-load-queue 5)))))
+				 (set! next-load-queue (+ next-load-queue 5))))
+	 (pings-run (time-now)))
 
 (fluxa-init)
 
